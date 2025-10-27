@@ -1,6 +1,6 @@
-from .services.command import BaseActionCommand, Action
+from .services.command import Action, BaseActionCommand
 
 
 class Command(BaseActionCommand):
-    help = 'Restart services'
+    help = "Restart services"
     action = Action.restart.value

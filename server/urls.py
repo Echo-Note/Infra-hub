@@ -17,30 +17,30 @@ Including another URLconf
 
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, re_path
+from django.urls import include, path, re_path
 from django.views.static import serve as static_serve
 
 from apps.common.celery.flower import CeleryFlowerAPIView
-from apps.common.swagger.views import JsonApi, SwaggerUI, Redoc
 from apps.common.core.utils import auto_register_app_url
+from apps.common.swagger.views import JsonApi, Redoc, SwaggerUI
 from apps.common.utils.media import media_serve
 
 swagger_apis = [
-    re_path('^api-docs/schema/', JsonApi.as_view(), name='schema'),
-    re_path('^api-docs/swagger/$', SwaggerUI.as_view(url_name='schema'), name='swagger-ui'),
-    re_path('^api-docs/redoc/$', Redoc.as_view(url_name='schema'), name='schema-redoc'),
+    re_path("^api-docs/schema/", JsonApi.as_view(), name="schema"),
+    path("api-docs/swagger/", SwaggerUI.as_view(url_name="schema"), name="swagger-ui"),
+    path("api-docs/redoc/", Redoc.as_view(url_name="schema"), name="schema-redoc"),
 ]
 
 urlpatterns = [
-    re_path('^admin/', admin.site.urls),
-    re_path('^api/common/', include('apps.common.urls', namespace='common')),
-    re_path('^api/system/', include('apps.system.urls', namespace='system')),
-    re_path('^api/settings/', include('apps.settings.urls', namespace='settings')),
-    re_path('^api/notifications/', include('apps.notifications.urls', namespace='notifications')),
-    re_path('^api/flower/(?P<path>.*)$', CeleryFlowerAPIView.as_view(), name='flower-view'),
+    re_path("^admin/", admin.site.urls),
+    path("api/common/", include("apps.common.urls", namespace="common")),
+    path("api/system/", include("apps.system.urls", namespace="system")),
+    path("api/settings/", include("apps.settings.urls", namespace="settings")),
+    path("api/notifications/", include("apps.notifications.urls", namespace="notifications")),
+    re_path("^api/flower/(?P<path>.*)$", CeleryFlowerAPIView.as_view(), name="flower-view"),
     # media路径配置 开发环境可以启动下面配置，正式环境需要让nginx读取资源，无需进行转发
-    re_path('^media/(?P<path>.*)$', media_serve, {'document_root': settings.MEDIA_ROOT}),
-    re_path('^api/static/(?P<path>.*)$', static_serve, {'document_root': settings.STATIC_ROOT})
+    re_path("^media/(?P<path>.*)$", media_serve, {"document_root": settings.MEDIA_ROOT}),
+    re_path("^api/static/(?P<path>.*)$", static_serve, {"document_root": settings.STATIC_ROOT}),
 ]
 
 urlpatterns = swagger_apis + urlpatterns

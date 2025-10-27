@@ -8,15 +8,16 @@ from django.apps import AppConfig
 
 
 class CommonConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.common'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.common"
 
     def ready(self):
-        from .celery import heatbeat  # noqa
         from . import signal_handlers  # noqa
         from . import tasks  # noqa
+        from .celery import heatbeat  # noqa
         from .signals import django_ready
-        excludes = ['migrate', 'compilemessages', 'makemigrations', 'stop']
+
+        excludes = ["migrate", "compilemessages", "makemigrations", "stop"]
         for i in excludes:
             if i in sys.argv:
                 return

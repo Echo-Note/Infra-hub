@@ -1,7 +1,32 @@
+# IDE
 .idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python
 **/__pycache__/*
-*.mo
 __pycache__/*
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Django
+*.mo
+*.log
+db.sqlite3
+db.sqlite3-journal
+
+# Project specific
 data/*
 tmp/*
 static/*
@@ -9,3 +34,15 @@ upload/*
 apps/common/utils/ip/geoip/GeoLite2-City.mmdb
 apps/common/utils/ip/ipip/ipipfree.ipdb
 config.yml
+
+# Pre-commit
+.pre-commit-cache/
+
+# uv
+.venv/
+venv/
+.uv/
+
+# Environment
+.env
+.env.local

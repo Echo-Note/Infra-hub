@@ -9,15 +9,15 @@ from ..const import CONFIG
 
 # 访问白名单配置，无需权限配置, key为路由，value为列表，对应的是请求方式， * 表示全部请求方式, 请求方式为大写
 PERMISSION_WHITE_URL = {
-    "^/api/system/login$": ['*'],
-    "^/api/system/logout$": ['*'],
-    "^/api/system/userinfo$": ['GET'],
-    "^/api/system/routes$": ['*'],
-    "^/api/system/dashboard/": ['*'],
-    "^/api/.*choices$": ['*'],
-    "^/api/.*search-fields$": ['*'],
-    "^/api/common/resources/cache$": ['*'],
-    "^/api/notifications/site-messages/unread$": ['*'],
+    "^/api/system/login$": ["*"],
+    "^/api/system/logout$": ["*"],
+    "^/api/system/userinfo$": ["GET"],
+    "^/api/system/routes$": ["*"],
+    "^/api/system/dashboard/": ["*"],
+    "^/api/.*choices$": ["*"],
+    "^/api/.*search-fields$": ["*"],
+    "^/api/common/resources/cache$": ["*"],
+    "^/api/notifications/site-messages/unread$": ["*"],
 }
 
 # 前端权限路由 忽略配置
@@ -32,18 +32,14 @@ ROUTE_IGNORE_URL = [
 
 # 访问权限配置
 PERMISSION_SHOW_PREFIX = [
-    r'api/system',
-    r'api/settings',
-    r'api/notifications',
-    r'api/flower',
-    r'api-docs',
+    r"api/system",
+    r"api/settings",
+    r"api/notifications",
+    r"api/flower",
+    r"api-docs",
 ]
 # 数据权限配置
-PERMISSION_DATA_AUTH_APPS = [
-    'system',
-    'settings',
-    'notifications'
-]
+PERMISSION_DATA_AUTH_APPS = ["system", "settings", "notifications"]
 
 API_LOG_ENABLE = CONFIG.API_LOG_ENABLE
 API_LOG_METHODS = CONFIG.API_LOG_METHODS  # 'ALL'

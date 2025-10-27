@@ -38,7 +38,7 @@ class AutoCleanFileMixin(object):
     """
 
     def save(self, *args, **kwargs):
-        if kwargs.get('force_insert', None):
+        if kwargs.get("force_insert", None):
             filelist = []
         else:
             filelist = self.__get_filelist(self._meta.model.objects.filter(pk=self.pk).first())
@@ -96,6 +96,7 @@ class AutoCleanFileMixin(object):
         for file in filelist:
             file.delete()
 
+
 class DbBaseModel(models.Model):
     created_time = models.DateTimeField(auto_now_add=True, verbose_name=_("Created time"), null=True, blank=True)
     updated_time = models.DateTimeField(auto_now=True, verbose_name=_("Updated time"), null=True, blank=True)
@@ -106,23 +107,43 @@ class DbBaseModel(models.Model):
 
 
 class DbAuditModel(DbBaseModel):
-    creator = models.ForeignKey(to=settings.AUTH_USER_MODEL, related_query_name='creator_query', null=True, blank=True,
-                                verbose_name=_("Creator"), on_delete=models.SET_NULL, related_name='+')
-    modifier = models.ForeignKey(to=settings.AUTH_USER_MODEL, related_query_name='modifier_query', null=True,
-                                 blank=True, verbose_name=_("Modifier"), on_delete=models.SET_NULL, related_name='+')
-    dept_belong = models.ForeignKey(to="system.DeptInfo", related_query_name='dept_belong_query', null=True, blank=True,
-                                    verbose_name=_("Data ownership department"), on_delete=models.SET_NULL,
-                                    related_name='+')
+    creator = models.ForeignKey(
+        to=settings.AUTH_USER_MODEL,
+        related_query_name="creator_query",
+        null=True,
+        blank=True,
+        verbose_name=_("Creator"),
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    modifier = models.ForeignKey(
+        to=settings.AUTH_USER_MODEL,
+        related_query_name="modifier_query",
+        null=True,
+        blank=True,
+        verbose_name=_("Modifier"),
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+    dept_belong = models.ForeignKey(
+        to="system.DeptInfo",
+        related_query_name="dept_belong_query",
+        null=True,
+        blank=True,
+        verbose_name=_("Data ownership department"),
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
 
     class Meta:
         abstract = True
 
 
 def upload_directory_path(instance, filename):
-    prefix = filename.split('.')[-1]
+    prefix = filename.split(".")[-1]
     tmp_name = f"{filename}_{time.time()}"
     new_filename = f"{uuid.uuid5(uuid.NAMESPACE_DNS, tmp_name).__str__().replace('-', '')}.{prefix}"
-    labels = instance._meta.label_lower.split('.')
+    labels = instance._meta.label_lower.split(".")
     if creator := getattr(instance, "creator", None):
         creator_pk = creator.pk
     else:

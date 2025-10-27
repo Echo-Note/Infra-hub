@@ -6,9 +6,10 @@
 # date : 8/10/2024
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.plumbing import build_object_type, build_basic_type
+
+from drf_spectacular.plumbing import build_basic_type, build_object_type
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiRequest
+from drf_spectacular.utils import OpenApiRequest, extend_schema
 from rest_framework.generics import GenericAPIView
 
 from apps.common.base.utils import AESCipherV2
@@ -24,6 +25,7 @@ from apps.system.utils.auth import verify_sms_email_code
 
 class ResetPasswordAPIView(GenericAPIView):
     """重置密码"""
+
     permission_classes = []
     authentication_classes = []
     throttle_classes = [ResetPasswordThrottle]
@@ -32,17 +34,17 @@ class ResetPasswordAPIView(GenericAPIView):
         request=OpenApiRequest(
             build_object_type(
                 properties={
-                    'verify_token': build_basic_type(OpenApiTypes.STR),
-                    'verify_code': build_basic_type(OpenApiTypes.STR),
+                    "verify_token": build_basic_type(OpenApiTypes.STR),
+                    "verify_code": build_basic_type(OpenApiTypes.STR),
                 }
             )
         ),
-        responses=get_default_response_schema()
+        responses=get_default_response_schema(),
     )
     def post(self, request, *args, **kwargs):
         """重置密码"""
         query_key, target, verify_token = verify_sms_email_code(request, ResetBlockUtil)
-        password = request.data.get('password')
+        password = request.data.get("password")
         if not password:
             return ApiResponse(code=1004, detail=_("Operation failed. Abnormal data"))
 
@@ -51,9 +53,9 @@ class ResetPasswordAPIView(GenericAPIView):
 
         instance = UserInfo.objects.get(**{query_key: target})
         if not check_password_rules(password, instance.is_superuser):
-            return ApiResponse(code=1002, detail=_('Password does not match security rules'))
+            return ApiResponse(code=1002, detail=_("Password does not match security rules"))
         instance.set_password(password)
         instance.modifier = instance
-        instance.save(update_fields=['password', 'modifier'])
+        instance.save(update_fields=["password", "modifier"])
         TokenTempCache.expired_cache_token(verify_token)
         return ApiResponse(detail=_("Reset password success, return to login page"))

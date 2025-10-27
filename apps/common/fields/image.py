@@ -6,9 +6,10 @@
 # date : 1/17/2024
 import os
 
-from django.core.files.storage import default_storage, FileSystemStorage
+from django.core.files.storage import FileSystemStorage, default_storage
 from django.db import models
 from django.db.models.fields.files import ImageFieldFile
+
 from imagekit.cachefiles import ImageCacheFile
 from imagekit.models.fields import SpecHostField
 from imagekit.specs import SpecHost
@@ -18,8 +19,8 @@ from pilkit.utils import suggest_extension
 
 
 def source_name(generator, index):
-    source_filename = getattr(generator.source, 'name', None)
-    ext = suggest_extension(source_filename or '', generator.format)
+    source_filename = getattr(generator.source, "name", None)
+    ext = suggest_extension(source_filename or "", generator.format)
     return f"{os.path.splitext(source_filename)[0]}_{index}{ext}"
 
 
@@ -29,8 +30,8 @@ def get_thumbnail(source, index, force=False):
     spec = source.field.get_spec(source=source)
     width = spec.processors[0].width
     height = spec.processors[0].height
-    spec.format = 'JPEG'
-    spec.options = {'quality': 90}
+    spec.format = "JPEG"
+    spec.options = {"quality": 90}
     if index not in scales:
         index = scales[-1]
     spec.processors = [ResizeToFill(int(width / index), int(height / index))]
@@ -46,7 +47,7 @@ class ProcessedImageFieldFile(ImageFieldFile):
         filename, ext = os.path.splitext(name)
         spec = self.field.get_spec(source=content)
         ext = suggest_extension(name, spec.format)
-        new_name = '%s%s' % (filename, ext)
+        new_name = "%s%s" % (filename, ext)
         content = generate(spec)
         return super().save(new_name, content, save)
 
@@ -68,8 +69,8 @@ class ProcessedImageFieldFile(ImageFieldFile):
     @property
     def url(self):
         url: str = super().url
-        if self.is_local_storage and url.endswith('.png'):
-            return url.replace('.png', '_1.jpg')
+        if self.is_local_storage and url.endswith(".png"):
+            return url.replace(".png", "_1.jpg")
         return url
 
 
@@ -81,11 +82,24 @@ class ProcessedImageField(models.ImageField, SpecHostField):
     within a reasonable size.
 
     """
+
     attr_class = ProcessedImageFieldFile
 
-    def __init__(self, processors=None, format=None, options=None, scales=None,
-                 verbose_name=None, name=None, width_field=None, height_field=None,
-                 autoconvert=None, spec=None, spec_id=None, **kwargs):
+    def __init__(
+        self,
+        processors=None,
+        format=None,
+        options=None,
+        scales=None,
+        verbose_name=None,
+        name=None,
+        width_field=None,
+        height_field=None,
+        autoconvert=None,
+        spec=None,
+        spec_id=None,
+        **kwargs,
+    ):
         """
         The ProcessedImageField constructor accepts all of the arguments that
         the :class:`django.db.models.ImageField` constructor accepts, as well
@@ -98,13 +112,18 @@ class ProcessedImageField(models.ImageField, SpecHostField):
             autoconvert = True
 
         self.scales = scales if scales is not None else [1]
-        self.format = format if format else 'png'
+        self.format = format if format else "png"
 
-        SpecHost.__init__(self, processors=processors, format=self.format,
-                          options=options, autoconvert=autoconvert, spec=spec,
-                          spec_id=spec_id)
-        models.ImageField.__init__(self, verbose_name, name, width_field,
-                                   height_field, **kwargs)
+        SpecHost.__init__(
+            self,
+            processors=processors,
+            format=self.format,
+            options=options,
+            autoconvert=autoconvert,
+            spec=spec,
+            spec_id=spec_id,
+        )
+        models.ImageField.__init__(self, verbose_name, name, width_field, height_field, **kwargs)
 
     def contribute_to_class(self, cls, name):
         self._set_spec_id(cls, name)

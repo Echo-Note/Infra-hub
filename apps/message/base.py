@@ -8,9 +8,10 @@ import asyncio
 import datetime
 import json
 
+from django.utils.translation import gettext_lazy as _
+
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.utils.translation import gettext_lazy as _
 from rest_framework.utils import encoders
 
 from apps.common.decorators import cached_method
@@ -67,15 +68,15 @@ class AsyncJsonWebsocket(AsyncWebsocketConsumer):
         mid: 消息ID，该ID和发送端的mid保持一致
         """
         content = {
-            'code': code,
-            'action': action,
-            'detail': detail if detail else (_("Operation successful") if code == 1000 else _("Operation failed")),
-            'timestamp': str(datetime.datetime.now()),
+            "code": code,
+            "action": action,
+            "detail": detail if detail else (_("Operation successful") if code == 1000 else _("Operation failed")),
+            "timestamp": str(datetime.datetime.now()),
         }
         if data:
-            content['data'] = data
+            content["data"] = data
         if mid:
-            content['mid'] = mid
+            content["mid"] = mid
         content.update(kwargs)
         await self.send_json(content, close)
 
@@ -86,16 +87,16 @@ class AsyncJsonWebsocket(AsyncWebsocketConsumer):
             except Exception as e:
                 logger.error("failed to decode json", exc_info=e)
                 return
-            action = content.get('action')
+            action = content.get("action")
             if not action:
                 logger.error(f"action not exists. so close. {content}")
                 await asyncio.sleep(3)
                 await self.close()
-            if mid := content.get('mid'):
+            if mid := content.get("mid"):
                 set_mid_result_to_cache(mid, content)
-            data = content.get('data', {})
+            data = content.get("data", {})
             match action:
-                case 'ping' | 'userinfo' | 'push_message':
+                case "ping" | "userinfo" | "push_message":
                     await self.channel_layer.send(self.channel_name, {"type": action, "data": data})
                 case _:
                     await self.receive_json(action, data, content, **kwargs)
@@ -106,7 +107,7 @@ class AsyncJsonWebsocket(AsyncWebsocketConsumer):
         raise ValueError("No text section for incoming WebSocket frame!")
 
     async def _send_base(self, event):
-        data = event['data']
+        data = event["data"]
         if isinstance(data, str):
             await self.send_base_json(event["type"], data, mid=event.get("mid"))
         else:
@@ -114,11 +115,11 @@ class AsyncJsonWebsocket(AsyncWebsocketConsumer):
 
     async def ping(self, event):
         await self.channel_layer.update_active_layers(self.group_name, self.channel_name)
-        event['data'] = 'pong'
+        event["data"] = "pong"
         await self._send_base(event)
 
     async def userinfo(self, event):
-        event['data'] = await get_userinfo(self.user)
+        event["data"] = await get_userinfo(self.user)
         await self._send_base(event)
 
     # 系统推送消息到客户端，推送消息格式如下：{"timestamp": 1709714533.5625794, "action": "push_message", "data": {"message_type": 11}}

@@ -5,6 +5,7 @@
 # author : ly_13
 # date : 12/18/2023
 
+
 # https://docs.djangoproject.com/zh-hans/5.0/topics/db/multi-db/#automatic-database-routing
 class DBRouter:
     """

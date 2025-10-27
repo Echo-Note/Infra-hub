@@ -9,7 +9,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.common.core.models import DbAuditModel, DbUuidModel, DbCharModel
+from apps.common.core.models import DbAuditModel, DbCharModel, DbUuidModel
 from apps.system.models import ModeTypeAbstract
 
 
@@ -18,11 +18,14 @@ class DataPermission(DbAuditModel, ModeTypeAbstract, DbUuidModel):
     rules = models.JSONField(verbose_name=_("Rules"), max_length=10240)
     is_active = models.BooleanField(verbose_name=_("Is active"), default=True)
     menu = models.ManyToManyField(
-        "system.Menu", verbose_name=_("Menu"), blank=True,
-        help_text=_("If a menu exists, it only applies to the selected menu permission"))
+        "system.Menu",
+        verbose_name=_("Menu"),
+        blank=True,
+        help_text=_("If a menu exists, it only applies to the selected menu permission"),
+    )
 
     class Meta:
-        ordering = ('-created_time',)
+        ordering = ("-created_time",)
         verbose_name = _("Data permission")
         verbose_name_plural = verbose_name
 

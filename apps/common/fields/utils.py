@@ -7,6 +7,7 @@
 from functools import wraps
 
 from django.db.models.fields.files import FieldFile
+
 from rest_framework.fields import Field as RFField
 
 
@@ -35,7 +36,7 @@ def input_wrapper(func):
     def wrapper(*args, **kwargs) -> RFField:
         class Field(func):
             def __init__(self, *_args, **_kwargs):
-                self.input_type = _kwargs.pop("input_type", '')
+                self.input_type = _kwargs.pop("input_type", "")
                 super().__init__(*_args, **_kwargs)
 
         return Field(*args, **kwargs)

@@ -19,7 +19,7 @@ class RedisCacheBase(object):
         self._timeout = timeout
 
     def __getattribute__(self, item):
-        if isinstance(item, str) and item != 'cache_key':
+        if isinstance(item, str) and item != "cache_key":
             if hasattr(self, "cache_key"):
                 logger.debug(f'act:{item} cache_key:{super().__getattribute__("cache_key")}')
         return super().__getattribute__(item)
@@ -51,7 +51,7 @@ class RedisCacheBase(object):
         return cache.expire(self.cache_key, timeout=timeout)
 
     def iter_keys(self):
-        if not self.cache_key.endswith('*'):
+        if not self.cache_key.endswith("*"):
             self.cache_key = f"{self.cache_key}*"
         return cache.iter_keys(self.cache_key)
 

@@ -9,9 +9,10 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.plumbing import build_object_type, build_basic_type
+
+from drf_spectacular.plumbing import build_basic_type, build_object_type
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiRequest
+from drf_spectacular.utils import OpenApiRequest, extend_schema
 from rest_framework.exceptions import APIException
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -23,8 +24,15 @@ from apps.common.swagger.utils import get_default_response_schema
 from apps.common.utils.request import get_request_ip
 from apps.settings.utils.security import LoginBlockUtil, LoginIpBlockUtil
 from apps.system.models import UserInfo, UserLoginLog
-from apps.system.utils.auth import get_username_password, get_token_lifetime, check_is_block, check_token_and_captcha, \
-    save_login_log, verify_sms_email_code, check_different_city_login_if_need
+from apps.system.utils.auth import (
+    check_different_city_login_if_need,
+    check_is_block,
+    check_token_and_captcha,
+    get_token_lifetime,
+    get_username_password,
+    save_login_log,
+    verify_sms_email_code,
+)
 
 
 def login_failed(request, username):
@@ -45,8 +53,9 @@ def login_failed(request, username):
             "(The account will be temporarily locked for {block_time} minutes)"
         ).format(times_try=times_remainder, block_time=settings.SECURITY_LOGIN_LIMIT_TIME)
     else:
-        detail = _("The account has been locked (please contact admin to unlock it or try"
-                   " again after {} minutes)").format(settings.SECURITY_LOGIN_LIMIT_TIME)
+        detail = _(
+            "The account has been locked (please contact admin to unlock it or try" " again after {} minutes)"
+        ).format(settings.SECURITY_LOGIN_LIMIT_TIME)
     raise APIException(detail)
 
 
@@ -63,33 +72,34 @@ def login_success(request, user_obj, login_type=UserLoginLog.LoginTypeChoices.US
 
 class BasicLoginAPIView(TokenObtainPairView):
     """用户登录"""
+
     throttle_classes = [LoginThrottle]
 
     @extend_schema(
         request=OpenApiRequest(
             build_object_type(
                 properties={
-                    'username': build_basic_type(OpenApiTypes.STR),
-                    'password': build_basic_type(OpenApiTypes.STR),
-                    'token': build_basic_type(OpenApiTypes.STR),
-                    'captcha_key': build_basic_type(OpenApiTypes.STR),
-                    'captcha_code': build_basic_type(OpenApiTypes.STR),
+                    "username": build_basic_type(OpenApiTypes.STR),
+                    "password": build_basic_type(OpenApiTypes.STR),
+                    "token": build_basic_type(OpenApiTypes.STR),
+                    "captcha_key": build_basic_type(OpenApiTypes.STR),
+                    "captcha_code": build_basic_type(OpenApiTypes.STR),
                 },
-                required=['username', 'password'],
+                required=["username", "password"],
             )
         ),
         responses=get_default_response_schema(
             {
-                'data': build_object_type(
+                "data": build_object_type(
                     properties={
-                        'refresh': build_basic_type(OpenApiTypes.STR),
-                        'access': build_basic_type(OpenApiTypes.STR),
-                        'access_token_lifetime': build_basic_type(OpenApiTypes.NUMBER),
-                        'refresh_token_lifetime': build_basic_type(OpenApiTypes.NUMBER)
+                        "refresh": build_basic_type(OpenApiTypes.STR),
+                        "access": build_basic_type(OpenApiTypes.STR),
+                        "access_token_lifetime": build_basic_type(OpenApiTypes.NUMBER),
+                        "refresh_token_lifetime": build_basic_type(OpenApiTypes.NUMBER),
                     }
                 )
             }
-        )
+        ),
     )
     def post(self, request, *args, **kwargs):
         """用户名密码登录"""
@@ -97,14 +107,15 @@ class BasicLoginAPIView(TokenObtainPairView):
             return ApiResponse(code=1001, detail=_("Login forbidden"))
 
         ipaddr = get_request_ip(request)
-        client_id, token = check_token_and_captcha(request, settings.SECURITY_LOGIN_TEMP_TOKEN_ENABLED,
-                                                   settings.SECURITY_LOGIN_CAPTCHA_ENABLED)
+        client_id, token = check_token_and_captcha(
+            request, settings.SECURITY_LOGIN_TEMP_TOKEN_ENABLED, settings.SECURITY_LOGIN_CAPTCHA_ENABLED
+        )
 
         username, password = get_username_password(settings.SECURITY_LOGIN_ENCRYPTED_ENABLED, request, token)
 
         check_is_block(username, ipaddr)
 
-        serializer = self.get_serializer(data={'username': username, 'password': password})
+        serializer = self.get_serializer(data={"username": username, "password": password})
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
@@ -117,15 +128,15 @@ class BasicLoginAPIView(TokenObtainPairView):
     @extend_schema(
         responses=get_default_response_schema(
             {
-                'data': build_object_type(
+                "data": build_object_type(
                     properties={
-                        'access': build_basic_type(OpenApiTypes.BOOL),
-                        'captcha': build_basic_type(OpenApiTypes.BOOL),
-                        'token': build_basic_type(OpenApiTypes.BOOL),
-                        'encrypted': build_basic_type(OpenApiTypes.BOOL),
-                        'lifetime': build_basic_type(OpenApiTypes.NUMBER),
-                        'reset': build_basic_type(OpenApiTypes.BOOL),
-                        'basic': build_basic_type(OpenApiTypes.BOOL),
+                        "access": build_basic_type(OpenApiTypes.BOOL),
+                        "captcha": build_basic_type(OpenApiTypes.BOOL),
+                        "token": build_basic_type(OpenApiTypes.BOOL),
+                        "encrypted": build_basic_type(OpenApiTypes.BOOL),
+                        "lifetime": build_basic_type(OpenApiTypes.NUMBER),
+                        "reset": build_basic_type(OpenApiTypes.BOOL),
+                        "basic": build_basic_type(OpenApiTypes.BOOL),
                     }
                 )
             }
@@ -134,44 +145,45 @@ class BasicLoginAPIView(TokenObtainPairView):
     def get(self, request, *args, **kwargs):
         """获取登录配置信息"""
         config = {
-            'access': settings.SECURITY_LOGIN_ACCESS_ENABLED,
-            'captcha': settings.SECURITY_LOGIN_CAPTCHA_ENABLED,
-            'token': settings.SECURITY_LOGIN_TEMP_TOKEN_ENABLED,
-            'encrypted': settings.SECURITY_LOGIN_ENCRYPTED_ENABLED,
-            'lifetime': settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME').days,
-            'reset': settings.SECURITY_RESET_PASSWORD_ACCESS_ENABLED,
-            'basic': settings.SECURITY_LOGIN_BY_BASIC_ENABLED,
+            "access": settings.SECURITY_LOGIN_ACCESS_ENABLED,
+            "captcha": settings.SECURITY_LOGIN_CAPTCHA_ENABLED,
+            "token": settings.SECURITY_LOGIN_TEMP_TOKEN_ENABLED,
+            "encrypted": settings.SECURITY_LOGIN_ENCRYPTED_ENABLED,
+            "lifetime": settings.SIMPLE_JWT.get("REFRESH_TOKEN_LIFETIME").days,
+            "reset": settings.SECURITY_RESET_PASSWORD_ACCESS_ENABLED,
+            "basic": settings.SECURITY_LOGIN_BY_BASIC_ENABLED,
         }
         return ApiResponse(data=config)
 
 
 class VerifyCodeLoginAPIView(TokenObtainPairView):
     """用户验证码登录"""
+
     throttle_classes = [LoginThrottle]
 
     @extend_schema(
         request=OpenApiRequest(
             build_object_type(
                 properties={
-                    'password': build_basic_type(OpenApiTypes.STR),
-                    'verify_token': build_basic_type(OpenApiTypes.STR),
-                    'verify_code': build_basic_type(OpenApiTypes.STR),
+                    "password": build_basic_type(OpenApiTypes.STR),
+                    "verify_token": build_basic_type(OpenApiTypes.STR),
+                    "verify_code": build_basic_type(OpenApiTypes.STR),
                 },
-                required=['verify_token', 'verify_code'],
+                required=["verify_token", "verify_code"],
             )
         ),
         responses=get_default_response_schema(
             {
-                'data': build_object_type(
+                "data": build_object_type(
                     properties={
-                        'refresh': build_basic_type(OpenApiTypes.STR),
-                        'access': build_basic_type(OpenApiTypes.STR),
-                        'access_token_lifetime': build_basic_type(OpenApiTypes.NUMBER),
-                        'refresh_token_lifetime': build_basic_type(OpenApiTypes.NUMBER)
+                        "refresh": build_basic_type(OpenApiTypes.STR),
+                        "access": build_basic_type(OpenApiTypes.STR),
+                        "access_token_lifetime": build_basic_type(OpenApiTypes.NUMBER),
+                        "refresh_token_lifetime": build_basic_type(OpenApiTypes.NUMBER),
                     }
                 )
             }
-        )
+        ),
     )
     def post(self, request, *args, **kwargs):
         """验证码登录"""
@@ -181,8 +193,8 @@ class VerifyCodeLoginAPIView(TokenObtainPairView):
         query_key, target, verify_token = verify_sms_email_code(request, LoginBlockUtil)
         check_is_block(target, ipaddr)
 
-        if query_key == 'username':
-            password = request.data.get('password')
+        if query_key == "username":
+            password = request.data.get("password")
             if settings.SECURITY_LOGIN_ENCRYPTED_ENABLED:
                 password = AESCipherV2(verify_token).decrypt(password)
             user = authenticate(**{query_key: target}, password=password)
@@ -193,11 +205,11 @@ class VerifyCodeLoginAPIView(TokenObtainPairView):
 
         refresh = RefreshToken.for_user(user)
         result = {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
         }
         user.last_login = timezone.now()
-        user.save(update_fields=['last_login'])
+        user.save(update_fields=["last_login"])
         result.update(**get_token_lifetime(user))
         login_success(request, user, login_type=UserLoginLog.get_login_type(query_key))
         return ApiResponse(data=result)

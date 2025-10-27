@@ -1,0 +1,80 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+
+repos:
+  # General pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        name: 删除尾随空格
+      - id: end-of-file-fixer
+        name: 确保文件以换行符结尾
+      - id: check-yaml
+        name: 检查 YAML 文件语法
+      - id: check-added-large-files
+        name: 检查大文件
+        args: ['--maxkb=1000']
+      # - id: check-json
+        # name: 检查 JSON 文件语法
+      - id: check-toml
+        name: 检查 TOML 文件语法
+      - id: check-merge-conflict
+        name: 检查合并冲突标记
+      # - id: debug-statements
+        # name: 检查 Python debug 语句
+
+  # Python import sorting
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: 排序 Python imports
+        args: ['--profile', 'black', '--line-length', '120']
+
+  # Python code formatting
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        name: 格式化 Python 代码
+        language_version: python3.12
+        args: ['--line-length', '120']
+
+  # Python code linting
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        name: Python 代码检查
+        args: ['--max-line-length=120', '--extend-ignore=E203,W503,B007,E402,E501,B026,F821,F811,
+        B001,F403,F401,B010,E722,B008,E701,C408,F541,C416,F405,E266,F841,B009,C404,C403,C419,B014,E731,B016']
+        additional_dependencies: [flake8-bugbear, flake8-comprehensions]
+
+  # Django specific checks
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: 1.21.0
+    hooks:
+      - id: django-upgrade
+        name: Django 代码升级检查
+        args: ['--target-version', '5.0']
+
+# 设置默认的语言版本
+default_language_version:
+  python: python3.12
+
+# 在提交和推送时运行
+default_stages: [pre-commit]
+
+# 排除文件
+exclude: |
+  (?x)^(
+      migrations/.*|
+      .*\.min\.(js|css)|
+      static/.*|
+      media/.*|
+      data/.*|
+      tmp/.*|
+      locale/.*\.po|
+      .*\.pyc
+  )$

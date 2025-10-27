@@ -27,9 +27,7 @@ class RedisChannelLayer(_RedisChannelLayer):
         connection = self.connection(self.consistent_hash(group))
 
         # Discard old channels based on group_expiry
-        await connection.zremrangebyscore(
-            key, min=0, max=int(time.time()) - self.layer_expire
-        )
+        await connection.zremrangebyscore(key, min=0, max=int(time.time()) - self.layer_expire)
 
         return connection, key
 

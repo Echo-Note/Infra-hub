@@ -7,8 +7,9 @@
 
 import datetime
 
-from celery.utils.log import get_task_logger
 from django.utils import timezone
+
+from celery.utils.log import get_task_logger
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
 from apps.system.models import OperationLog, UploadFile

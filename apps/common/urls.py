@@ -4,14 +4,14 @@
 # filename : urls
 # author : ly_13
 # date : 6/6/2023
-from django.urls import re_path
+from django.urls import path, re_path
 
-from apps.common.api.common import ResourcesIDCacheAPIView, CountryListAPIView, HealthCheckAPIView
+from apps.common.api.common import CountryListAPIView, HealthCheckAPIView, ResourcesIDCacheAPIView
 
 app_name = "common"
 
 urlpatterns = [
-    re_path('^resources/cache$', ResourcesIDCacheAPIView.as_view(), name='resources-cache'),
-    re_path('^countries$', CountryListAPIView.as_view(), name='countries'),
-    re_path('^api/health', HealthCheckAPIView.as_view(), name='health'),
+    path("resources/cache", ResourcesIDCacheAPIView.as_view(), name="resources-cache"),
+    path("countries", CountryListAPIView.as_view(), name="countries"),
+    re_path("^api/health", HealthCheckAPIView.as_view(), name="health"),
 ]

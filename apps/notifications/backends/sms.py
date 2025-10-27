@@ -1,10 +1,11 @@
 from apps.common.sdk.sms.endpoint import SMS
+
 from .base import BackendBase
 
 
 class SMS(BackendBase):
-    account_field = 'phone'
-    is_enable_field_in_settings = 'SMS_ENABLED'
+    account_field = "phone"
+    is_enable_field_in_settings = "SMS_ENABLED"
 
     def __init__(self):
         self.client = SMS()
