@@ -36,7 +36,7 @@ class SystemConfig(BaseConfig, DbUuidModel):
 
 
 class UserPersonalConfig(BaseConfig):
-    owner = models.ForeignKey("apps.system.UserInfo", verbose_name=_("User"), on_delete=models.CASCADE)
+    owner = models.ForeignKey("system.UserInfo", verbose_name=_("User"), on_delete=models.CASCADE)
     key = models.CharField(max_length=255, verbose_name=_("Config name"))
 
     class Meta:

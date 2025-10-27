@@ -19,6 +19,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-KGzKjZpWBp4R4RSa}
     volumes:
       - ${VOLUME_DIR:-../}/xadmin-postgresql/data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
       test: "pg_isready -q -U $$POSTGRES_USER -d $$POSTGRES_DB"
       interval: 10s
@@ -40,6 +42,8 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-nineven}
     volumes:
       - ${VOLUME_DIR:-../}/xadmin-redis/data:/data
+    ports:
+      - "6379:6379"
     healthcheck:
       test: "redis-cli -h 127.0.0.1 -p $$REDIS_PORT -a $$REDIS_PASSWORD info Replication"
       interval: 10s

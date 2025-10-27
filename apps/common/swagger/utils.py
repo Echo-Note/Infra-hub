@@ -24,7 +24,7 @@ class CustomAutoSchema(AutoSchema):
 
 
 class OpenApiAuthenticationScheme(OpenApiAuthenticationExtension):
-    target_class = 'common.core.auth.CookieJWTAuthentication'  # full import path OR class ref
+    target_class = 'apps.common.core.auth.CookieJWTAuthentication'  # full import path OR class ref
     name = 'CookieJWTAuthentication'  # name used in the schema
 
     def get_security_definition(self, auto_schema):
@@ -32,7 +32,7 @@ class OpenApiAuthenticationScheme(OpenApiAuthenticationExtension):
 
 
 class OpenApiPrimaryKeyRelatedField(OpenApiSerializerFieldExtension):
-    target_class = 'common.core.fields.BasePrimaryKeyRelatedField'
+    target_class = 'apps.common.core.fields.BasePrimaryKeyRelatedField'
 
     def map_serializer_field(self, auto_schema, direction):
         field = self.target

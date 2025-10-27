@@ -18,7 +18,7 @@ from django.core.asgi import get_asgi_application
 from django.core.handlers.asgi import ASGIRequest
 from django.utils.module_loading import import_string
 
-from apps.common import get_logger
+from apps.common.utils import get_logger
 from server.utils import set_current_request
 
 logger = get_logger(__name__)

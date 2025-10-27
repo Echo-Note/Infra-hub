@@ -34,7 +34,7 @@ class ModelLabelField(DbAuditModel, DbUuidModel):
 
     field_type = models.SmallIntegerField(choices=FieldChoices, default=FieldChoices.DATA, verbose_name=_("Field type"))
     parent = models.ForeignKey(
-        'apps.system.ModelLabelField', on_delete=models.CASCADE, null=True, blank=True,
+        'system.ModelLabelField', on_delete=models.CASCADE, null=True, blank=True,
         verbose_name=_("Parent node"))
     name = models.CharField(verbose_name=_("Model/Field name"), max_length=128)
     label = models.CharField(verbose_name=_("Model/Field label"), max_length=128)

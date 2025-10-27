@@ -20,9 +20,9 @@ from django.contrib import admin
 from django.urls import include, re_path
 from django.views.static import serve as static_serve
 
-from apps.common import CeleryFlowerAPIView
-from apps.common import auto_register_app_url
-from apps.common import JsonApi, SwaggerUI, Redoc
+from apps.common.celery.flower import CeleryFlowerAPIView
+from apps.common.swagger.views import JsonApi, SwaggerUI, Redoc
+from apps.common.core.utils import auto_register_app_url
 from apps.common.utils.media import media_serve
 
 swagger_apis = [

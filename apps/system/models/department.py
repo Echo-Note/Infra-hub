@@ -19,10 +19,10 @@ class DeptInfo(DbAuditModel, ModeTypeAbstract, DbUuidModel):
     name = models.CharField(verbose_name=_("Department name"), max_length=128)
     code = models.CharField(max_length=128, verbose_name=_("Department code"), unique=True)
     parent = models.ForeignKey(
-        'apps.system.DeptInfo', on_delete=models.PROTECT, verbose_name=_("Superior department"),
+        'system.DeptInfo', on_delete=models.PROTECT, verbose_name=_("Superior department"),
         null=True, blank=True, related_query_name="parent_query")
-    roles = models.ManyToManyField("apps.system.UserRole", verbose_name=_("Role permission"), blank=True)
-    rules = models.ManyToManyField("apps.system.DataPermission", verbose_name=_("Data permission"), blank=True)
+    roles = models.ManyToManyField("system.UserRole", verbose_name=_("Role permission"), blank=True)
+    rules = models.ManyToManyField("system.DataPermission", verbose_name=_("Data permission"), blank=True)
     rank = models.IntegerField(verbose_name=_("Rank"), default=99)
     auto_bind = models.BooleanField(verbose_name=_("Auto bind"), default=False,
                                     help_text=_(

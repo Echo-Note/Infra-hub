@@ -110,7 +110,7 @@ class DbAuditModel(DbBaseModel):
                                 verbose_name=_("Creator"), on_delete=models.SET_NULL, related_name='+')
     modifier = models.ForeignKey(to=settings.AUTH_USER_MODEL, related_query_name='modifier_query', null=True,
                                  blank=True, verbose_name=_("Modifier"), on_delete=models.SET_NULL, related_name='+')
-    dept_belong = models.ForeignKey(to="apps.system.DeptInfo", related_query_name='dept_belong_query', null=True, blank=True,
+    dept_belong = models.ForeignKey(to="system.DeptInfo", related_query_name='dept_belong_query', null=True, blank=True,
                                     verbose_name=_("Data ownership department"), on_delete=models.SET_NULL,
                                     related_name='+')
 

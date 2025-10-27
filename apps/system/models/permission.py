@@ -18,7 +18,7 @@ class DataPermission(DbAuditModel, ModeTypeAbstract, DbUuidModel):
     rules = models.JSONField(verbose_name=_("Rules"), max_length=10240)
     is_active = models.BooleanField(verbose_name=_("Is active"), default=True)
     menu = models.ManyToManyField(
-        "apps.system.Menu", verbose_name=_("Menu"), blank=True,
+        "system.Menu", verbose_name=_("Menu"), blank=True,
         help_text=_("If a menu exists, it only applies to the selected menu permission"))
 
     class Meta:
@@ -31,9 +31,9 @@ class DataPermission(DbAuditModel, ModeTypeAbstract, DbUuidModel):
 
 
 class FieldPermission(DbAuditModel, DbCharModel):
-    role = models.ForeignKey("apps.system.UserRole", on_delete=models.CASCADE, verbose_name=_("Role"))
-    menu = models.ForeignKey("apps.system.Menu", on_delete=models.CASCADE, verbose_name=_("Menu"))
-    field = models.ManyToManyField("apps.system.ModelLabelField", verbose_name=_("Field"), blank=True)
+    role = models.ForeignKey("system.UserRole", on_delete=models.CASCADE, verbose_name=_("Role"))
+    menu = models.ForeignKey("system.Menu", on_delete=models.CASCADE, verbose_name=_("Menu"))
+    field = models.ManyToManyField("system.ModelLabelField", verbose_name=_("Field"), blank=True)
 
     class Meta:
         verbose_name = _("Field permission")

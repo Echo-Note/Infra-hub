@@ -26,13 +26,13 @@ class MessageContent(AutoCleanFileMixin, DbAuditModel):
         DANGER = 'danger', _("Important notices")
 
     notice_user = models.ManyToManyField(
-        "apps.system.UserInfo", through="MessageUserRead", blank=True,
+        "system.UserInfo", through="MessageUserRead", blank=True,
         through_fields=('notice', 'owner'), verbose_name=_("The notified user"))
     notice_dept = models.ManyToManyField(
-        "apps.system.DeptInfo", blank=True,
+        "system.DeptInfo", blank=True,
         verbose_name=_("The notified department"))
     notice_role = models.ManyToManyField(
-        "apps.system.UserRole", blank=True,
+        "system.UserRole", blank=True,
         verbose_name=_("The notified role"))
     level = models.CharField(verbose_name=_("Notice level"), choices=LevelChoices, default=LevelChoices.DEFAULT,
                              max_length=20)
@@ -41,7 +41,7 @@ class MessageContent(AutoCleanFileMixin, DbAuditModel):
     title = models.CharField(verbose_name=_("Notice title"), max_length=255)
     message = models.TextField(verbose_name=_("Notice message"), blank=True, null=True)
     extra_json = models.JSONField(verbose_name=_("Additional json data"), blank=True, null=True)
-    file = models.ManyToManyField("apps.system.UploadFile", verbose_name=_("Uploaded attachments"))
+    file = models.ManyToManyField("system.UploadFile", verbose_name=_("Uploaded attachments"))
     publish = models.BooleanField(verbose_name=_("Publish"), default=True)
 
     @classmethod
@@ -62,7 +62,7 @@ class MessageContent(AutoCleanFileMixin, DbAuditModel):
 
 
 class MessageUserRead(DbAuditModel):
-    owner = models.ForeignKey("apps.system.UserInfo", on_delete=models.CASCADE, verbose_name=_("User"))
+    owner = models.ForeignKey("system.UserInfo", on_delete=models.CASCADE, verbose_name=_("User"))
     notice = models.ForeignKey(MessageContent, on_delete=models.CASCADE, verbose_name=_("Notice"))
     unread = models.BooleanField(verbose_name=_("Unread"), default=True, blank=False, db_index=True)
 

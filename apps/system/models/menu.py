@@ -58,7 +58,7 @@ class Menu(DbAuditModel, DbUuidModel):
         PATCH = 'PATCH', _("PATCH")
 
     parent = models.ForeignKey(
-        'apps.system.Menu', on_delete=models.SET_NULL, verbose_name=_("Parent menu"), null=True,
+        'system.Menu', on_delete=models.SET_NULL, verbose_name=_("Parent menu"), null=True,
         blank=True)
     menu_type = models.SmallIntegerField(choices=MenuChoices, default=MenuChoices.DIRECTORY,
                                          verbose_name=_("Menu type"))
@@ -67,8 +67,8 @@ class Menu(DbAuditModel, DbUuidModel):
     path = models.CharField(verbose_name=_("Route path or api path"), max_length=255)
     component = models.CharField(verbose_name=_("Component path"), max_length=255, null=True, blank=True)
     is_active = models.BooleanField(verbose_name=_("Is active"), default=True)
-    meta = models.OneToOneField("apps.system.MenuMeta", on_delete=models.CASCADE, verbose_name=_("Menu meta"))
-    model = models.ManyToManyField("apps.system.ModelLabelField", verbose_name=_("Model"), blank=True)
+    meta = models.OneToOneField("system.MenuMeta", on_delete=models.CASCADE, verbose_name=_("Menu meta"))
+    model = models.ManyToManyField("system.ModelLabelField", verbose_name=_("Model"), blank=True)
 
     # permission_marking = models.CharField(verbose_name="权限标识", max_length=255)
     # api_route = models.CharField(verbose_name="后端权限路由", max_length=255, null=True, blank=True)
