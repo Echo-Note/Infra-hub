@@ -1,59 +1,79 @@
-# xadmin-server
+# Infra-hub
 
-xadmin-基于Django+vue3的rbac权限管理系统
+## 项目简介
 
-前端 [xadmin-client](https://github.com/nineaiyu/xadmin-client)
+Infra-hub 是一个基于 [xadmin](https://github.com/nineaiyu/xadmin-server) 二次开发的虚拟化平台主机管理系统。感谢 xadmin 项目提供的优秀 RBAC 权限管理框架作为基础。
 
-### 在线预览
+## 主要功能
 
-[https://xadmin.dvcloud.xin/](https://xadmin.dvcloud.xin/)
-账号密码：admin/admin123
+本系统专注于虚拟化基础设施管理，提供以下核心功能：
 
-## 开发部署文档
+- **虚拟化平台主机管理**：统一管理多个虚拟化平台的主机资源
+- **自动化初始化**：集成 cloud-init 等工具，实现服务器自动化初始化
+- **配置管理**：支持批量下发配置文件和脚本
+- **权限控制**：基于 RBAC 的细粒度权限管理
+- **资源监控**：实时监控虚拟机资源使用情况
 
-[https://docs.dvcloud.xin/](https://docs.dvcloud.xin/)
+## 技术栈
 
-## [Centos 9 Stream 安装部署](https://docs.dvcloud.xin/guide/installation-local.html)
+- **后端**：Django + Django REST Framework
+- **前端**：Vue3 + Element Plus
+- **任务队列**：Celery + Redis
+- **权限管理**：基于 xadmin 的 RBAC 系统
 
-## [Docker 容器化部署](https://docs.dvcloud.xin/guide/installation-docker.html)
+## 快速开始
 
-# 附录
+### 环境要求
 
-⚠️ Windows上面无法正常运行celery flower，导致任务监控无法正常使用，请使用Linux环境开发部署
+- Python 3.8+
+- Redis
+- MySQL/PostgreSQL
 
-## 启动程序(启动之前必须配置好Redis和数据库)
+### 启动程序
 
-### A.一键执行命令【不支持windows平台，如果是Windows，请使用 手动执行命令】
+启动之前必须配置好 Redis 和数据库。
+
+#### 一键启动（不支持 Windows 平台）
 
 ```shell
 python manage.py start all -d  # -d 参数是后台运行，如果去掉，则前台运行
 ```
 
-### B.手动执行命令
+#### 手动启动
 
-#### 1.api服务
+1. API 服务
 
 ```shell
 python manage.py runserver 0.0.0.0:8896
 ```
 
-#### 2.定时任务
+2. 定时任务
 
 ```shell
 python -m celery -A server beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler --max-interval 60
 python -m celery -A server worker -P threads -l INFO -c 10 -Q celery --heartbeat-interval 10 -n celery@%h --without-mingle
 ```
 
-#### 3.任务监控[windows可能会异常]
+3. 任务监控（Windows 可能会异常）
 
 ```shell
-python -m celery -A server flower -logging=info --url_prefix=api/flower --auto_refresh=False  --address=0.0.0.0 --port=5566
+python -m celery -A server flower -logging=info --url_prefix=api/flower --auto_refresh=False --address=0.0.0.0 --port=5566
 ```
 
-## 捐赠or鼓励
+## 文档
 
-如果你觉得这个项目帮助到了你，你可以[star](https://github.com/nineaiyu/xadmin-server)表示鼓励，也可以帮作者买一杯果汁🍹表示鼓励。
+- [数据权限管理](docs/data-permission.md)
+- [字段权限管理](docs/field-permission.md)
+- [xadmin 原始文档](docs/xadmin-README.md)
 
-| 微信                                                                                     | 支付宝                                                                                     |
-|----------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
-| <img src="http://qiniu.cdn.xadmin.dvcloud.xin/pay/wxpay.jpg" height="188" width="188"> | <img src="http://qiniu.cdn.xadmin.dvcloud.xin/pay/alipay.jpg" height="188" width="188"> |
+## 注意事项
+
+⚠️ Windows 上面无法正常运行 celery flower，导致任务监控无法正常使用，请使用 Linux 环境开发部署。
+
+## 致谢
+
+本项目基于 [xadmin-server](https://github.com/nineaiyu/xadmin-server) 进行二次开发，感谢原作者的贡献。
+
+## License
+
+本项目遵循原项目的开源协议。
