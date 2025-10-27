@@ -6,6 +6,6 @@ data/*
 tmp/*
 static/*
 upload/*
-common/utils/ip/geoip/GeoLite2-City.mmdb
-common/utils/ip/ipip/ipipfree.ipdb
+apps/common/utils/ip/geoip/GeoLite2-City.mmdb
+apps/common/utils/ip/ipip/ipipfree.ipdb
 config.yml
