@@ -95,7 +95,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'server.middleware.RefererCheckMiddleware',
     'server.middleware.SQLCountMiddleware',
-    'common.core.middleware.ApiLoggingMiddleware',
+    'apps.common.core.middleware.ApiLoggingMiddleware',
     'server.middleware.EndMiddleware'
 ]
 
@@ -198,9 +198,9 @@ DATABASE_ROUTERS = ['common.core.db.router.DBRouter']
 # websocket 消息需要用到redis的消息发布订阅
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "common.cache.channel.RedisChannelLayer",
+        "BACKEND": "apps.common.cache.channel.RedisChannelLayer",
         # "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
-        "CONFIG": {
+        "CONFIG":  {
             "hosts": [f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{CHANNEL_LAYERS_CACHE_ID}"],
         },
     },
@@ -236,7 +236,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-AUTH_USER_MODEL = "system.UserInfo"
+AUTH_USER_MODEL = "apps.system.UserInfo"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
