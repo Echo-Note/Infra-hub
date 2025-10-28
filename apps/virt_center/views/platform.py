@@ -70,10 +70,33 @@ class PlatformViewSet(BaseModelSet):
             platform.status = Platform.Status.ERROR
             platform.save(update_fields=["status", "updated_time"])
 
+            # 根据错误类型提供用户友好的提示信息
+            error_msg = str(e)
+            detail_msg = "连接失败，请检查以下内容：\n"
+
+            # 常见错误类型及处理建议
+            if "authentication" in error_msg.lower() or "login" in error_msg.lower():
+                detail_msg += "1. 请确认用户名和密码是否正确\n2. 检查账户是否被锁定或过期"
+            elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
+                detail_msg += "1. 检查主机地址和端口是否正确\n2. 确认网络连接是否正常\n3. 检查防火墙是否阻止了连接"
+            elif "certificate" in error_msg.lower() or "ssl" in error_msg.lower():
+                detail_msg += "1. SSL 证书验证失败，建议关闭 SSL 验证\n2. 或者为 vCenter 配置有效的 SSL 证书"
+            elif "connect" in error_msg.lower() or "refused" in error_msg.lower():
+                detail_msg += (
+                    "1. 检查主机地址是否正确\n2. 确认 vCenter/ESXi 服务是否正常运行\n3. 检查端口号（默认 443）是否正确"
+                )
+            elif "not found" in error_msg.lower() or "404" in error_msg:
+                detail_msg += "1. 检查主机地址格式是否正确\n2. 确认 vCenter/ESXi 服务是否可访问"
+            else:
+                detail_msg += (
+                    f"1. 检查主机地址、端口、用户名和密码是否正确\n2. 确认网络连接正常\n3. 错误详情：{error_msg}"
+                )
+
             return ApiResponse(
                 code=1001,
                 msg=_("Platform connection failed"),
-                data={"connected": False, "error": str(e)},
+                detail=detail_msg,
+                data={"connected": False, "error": error_msg},
             )
 
     @extend_schema(responses=get_default_response_schema())
