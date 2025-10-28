@@ -166,7 +166,19 @@ class PlatformViewSet(BaseModelSet):
             # 更新凭据
             try:
                 credential = platform.credential
-                serializer = PlatformCredentialSerializer(credential, data=request.data, partial=True)
+
+                # 处理部分更新：如果密码或 token 为空，则从提交数据中移除，不更新这些字段
+                update_data = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
+
+                # 如果认证类型是密码认证，但密码字段为空，则不更新密码
+                if update_data.get("auth_type") == "password" and not update_data.get("password"):
+                    update_data.pop("password", None)
+
+                # 如果认证类型是 token 认证，但 token 字段为空，则不更新 token
+                if update_data.get("auth_type") == "token" and not update_data.get("token"):
+                    update_data.pop("token", None)
+
+                serializer = PlatformCredentialSerializer(credential, data=update_data, partial=True)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
                 return ApiResponse(data=serializer.data, msg=_("Credential updated"))
