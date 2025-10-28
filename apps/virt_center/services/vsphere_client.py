@@ -259,6 +259,399 @@ class VSphereClient:
         containerView.Destroy()
         return networks
 
+    '''
+    def wait_for_task(self, task: vim.Task, timeout: int = 300) -> bool:
+        """
+        等待任务完成
+
+        Args:
+            task: vSphere 任务对象
+            timeout: 超时时间（秒），默认 300 秒
+
+        Returns:
+            bool: 任务是否成功完成
+
+        Raises:
+            Exception: 任务失败或超时
+        """
+        import time
+
+        start_time = time.time()
+        while task.info.state in [vim.TaskInfo.State.running, vim.TaskInfo.State.queued]:
+            if time.time() - start_time > timeout:
+                raise Exception(f"任务超时: {task.info.name}")
+            time.sleep(1)
+
+        if task.info.state == vim.TaskInfo.State.success:
+            logger.info(f"任务完成: {task.info.name}")
+            return True
+        else:
+            error_msg = task.info.error.msg if task.info.error else "未知错误"
+            raise Exception(f"任务失败: {task.info.name} - {error_msg}")
+
+    def find_vm_by_name(self, vm_name: str) -> Optional[vim.VirtualMachine]:
+        """
+        根据名称查找虚拟机
+
+        Args:
+            vm_name: 虚拟机名称
+
+        Returns:
+            vim.VirtualMachine: 虚拟机对象，未找到返回 None
+        """
+        vms = self.get_vms()
+        for vm in vms:
+            if vm.name == vm_name:
+                return vm
+        return None
+
+    def find_vm_by_uuid(self, uuid: str, instance_uuid: bool = False) -> Optional[vim.VirtualMachine]:
+        """
+        根据 UUID 查找虚拟机
+
+        Args:
+            uuid: 虚拟机 UUID
+            instance_uuid: 是否使用 instance UUID（True）还是 BIOS UUID（False）
+
+        Returns:
+            vim.VirtualMachine: 虚拟机对象，未找到返回 None
+        """
+        search_index = self.content.searchIndex
+        vm = search_index.FindByUuid(None, uuid, True, instance_uuid)
+        return vm
+
+    def power_on_vm(self, vm: vim.VirtualMachine, wait: bool = True) -> vim.Task:
+        """
+        开启虚拟机电源
+
+        Args:
+            vm: 虚拟机对象
+            wait: 是否等待任务完成
+
+        Returns:
+            vim.Task: 任务对象
+
+        Raises:
+            Exception: 虚拟机已处于开启状态或操作失败
+        """
+        if vm.runtime.powerState == vim.VirtualMachinePowerState.poweredOn:
+            logger.warning(f"虚拟机 {vm.name} 已处于开启状态")
+            return None
+
+        logger.info(f"正在开启虚拟机: {vm.name}")
+        task = vm.PowerOnVM_Task()
+        if wait:
+            self.wait_for_task(task)
+            logger.info(f"虚拟机 {vm.name} 已成功开启")
+        return task
+
+    def power_off_vm(self, vm: vim.VirtualMachine, wait: bool = True) -> vim.Task:
+        """
+        关闭虚拟机电源（硬关机）
+
+        Args:
+            vm: 虚拟机对象
+            wait: 是否等待任务完成
+
+        Returns:
+            vim.Task: 任务对象
+
+        Raises:
+            Exception: 虚拟机已处于关闭状态或操作失败
+        """
+        if vm.runtime.powerState == vim.VirtualMachinePowerState.poweredOff:
+            logger.warning(f"虚拟机 {vm.name} 已处于关闭状态")
+            return None
+
+        logger.info(f"正在关闭虚拟机: {vm.name}")
+        task = vm.PowerOffVM_Task()
+        if wait:
+            self.wait_for_task(task)
+            logger.info(f"虚拟机 {vm.name} 已成功关闭")
+        return task
+
+    def shutdown_vm_guest(self, vm: vim.VirtualMachine) -> None:
+        """
+        通过 Guest OS 优雅关闭虚拟机（需要安装 VMware Tools）
+
+        Args:
+            vm: 虚拟机对象
+
+        Raises:
+            Exception: 虚拟机工具未运行或操作失败
+        """
+        if vm.runtime.powerState == vim.VirtualMachinePowerState.poweredOff:
+            logger.warning(f"虚拟机 {vm.name} 已处于关闭状态")
+            return
+
+        if vm.guest.toolsRunningStatus != "guestToolsRunning":
+            raise Exception(f"虚拟机 {vm.name} 的 VMware Tools 未运行，无法优雅关机")
+
+        logger.info(f"正在优雅关闭虚拟机: {vm.name}")
+        vm.ShutdownGuest()
+        logger.info(f"已向虚拟机 {vm.name} 发送关机信号")
+
+    def reboot_vm_guest(self, vm: vim.VirtualMachine) -> None:
+        """
+        通过 Guest OS 重启虚拟机（需要安装 VMware Tools）
+
+        Args:
+            vm: 虚拟机对象
+
+        Raises:
+            Exception: 虚拟机工具未运行或操作失败
+        """
+        if vm.runtime.powerState == vim.VirtualMachinePowerState.poweredOff:
+            raise Exception(f"虚拟机 {vm.name} 处于关闭状态，无法重启")
+
+        if vm.guest.toolsRunningStatus != "guestToolsRunning":
+            raise Exception(f"虚拟机 {vm.name} 的 VMware Tools 未运行，无法优雅重启")
+
+        logger.info(f"正在重启虚拟机: {vm.name}")
+        vm.RebootGuest()
+        logger.info(f"已向虚拟机 {vm.name} 发送重启信号")
+
+    def delete_vm(
+        self,
+        vm: vim.VirtualMachine,
+        force: bool = False,
+        wait: bool = True,
+    ) -> vim.Task:
+        """
+        删除虚拟机
+
+        Args:
+            vm: 虚拟机对象
+            force: 是否强制删除（自动关闭电源）
+            wait: 是否等待任务完成
+
+        Returns:
+            vim.Task: 任务对象
+
+        Raises:
+            Exception: 虚拟机处于开启状态且未设置 force，或删除失败
+        """
+        vm_name = vm.name
+        power_state = vm.runtime.powerState
+
+        # 检查虚拟机电源状态
+        if power_state == vim.VirtualMachinePowerState.poweredOn:
+            if not force:
+                raise Exception(f"虚拟机 {vm_name} 处于开启状态，请先关闭或设置 force=True")
+            else:
+                logger.info(f"虚拟机 {vm_name} 处于开启状态，正在强制关闭...")
+                self.power_off_vm(vm, wait=True)
+
+        # 删除虚拟机
+        logger.info(f"正在删除虚拟机: {vm_name}")
+        task = vm.Destroy_Task()
+        if wait:
+            self.wait_for_task(task)
+            logger.info(f"虚拟机 {vm_name} 已成功删除")
+        return task
+
+    def create_vm(
+        self,
+        vm_name: str,
+        datacenter: vim.Datacenter,
+        resource_pool: vim.ResourcePool,
+        datastore: vim.Datastore,
+        memory_mb: int = 1024,
+        num_cpus: int = 1,
+        guest_id: str = "otherGuest64",
+        network: Optional[vim.Network] = None,
+        disk_size_gb: int = 10,
+        wait: bool = True,
+    ) -> vim.Task:
+        """
+        创建新虚拟机
+
+        Args:
+            vm_name: 虚拟机名称
+            datacenter: 数据中心对象
+            resource_pool: 资源池对象
+            datastore: 数据存储对象
+            memory_mb: 内存大小（MB），默认 1024
+            num_cpus: CPU 数量，默认 1
+            guest_id: 客户机操作系统类型，默认 otherGuest64
+            network: 网络对象（可选）
+            disk_size_gb: 磁盘大小（GB），默认 10
+            wait: 是否等待任务完成
+
+        Returns:
+            vim.Task: 任务对象
+
+        Example:
+            # 获取必要的对象
+            datacenters = client.get_datacenters()
+            datacenter = datacenters[0]
+
+            clusters = client.get_clusters(datacenter)
+            resource_pool = clusters[0].resourcePool
+
+            datastores = client.get_datastores(datacenter)
+            datastore = datastores[0]
+
+            # 创建虚拟机
+            task = client.create_vm(
+                vm_name="test-vm",
+                datacenter=datacenter,
+                resource_pool=resource_pool,
+                datastore=datastore,
+                memory_mb=2048,
+                num_cpus=2,
+                disk_size_gb=20
+            )
+        """
+        logger.info(f"正在创建虚拟机: {vm_name}")
+
+        # 虚拟机文件路径
+        vm_file_info = vim.vm.FileInfo()
+        vm_file_info.vmPathName = f"[{datastore.name}]"
+
+        # 虚拟机配置
+        config = vim.vm.ConfigSpec()
+        config.name = vm_name
+        config.memoryMB = memory_mb
+        config.numCPUs = num_cpus
+        config.guestId = guest_id
+        config.files = vm_file_info
+
+        # 设备变更列表
+        device_changes = []
+
+        # 添加 SCSI 控制器
+        scsi_spec = vim.vm.device.VirtualDeviceSpec()
+        scsi_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
+        scsi_spec.device = vim.vm.device.ParaVirtualSCSIController()
+        scsi_spec.device.key = 1000
+        scsi_spec.device.deviceInfo = vim.Description()
+        scsi_spec.device.deviceInfo.label = "SCSI Controller"
+        scsi_spec.device.deviceInfo.summary = "SCSI Controller"
+        scsi_spec.device.sharedBus = vim.vm.device.VirtualSCSIController.Sharing.noSharing
+        device_changes.append(scsi_spec)
+
+        # 添加磁盘
+        disk_spec = vim.vm.device.VirtualDeviceSpec()
+        disk_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
+        disk_spec.fileOperation = vim.vm.device.VirtualDeviceSpec.FileOperation.create
+        disk_spec.device = vim.vm.device.VirtualDisk()
+        disk_spec.device.key = 2000
+        disk_spec.device.deviceInfo = vim.Description()
+        disk_spec.device.deviceInfo.label = "Hard Disk 1"
+        disk_spec.device.deviceInfo.summary = f"{disk_size_gb} GB"
+        disk_spec.device.backing = vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
+        disk_spec.device.backing.diskMode = "persistent"
+        disk_spec.device.backing.fileName = f"[{datastore.name}] {vm_name}/{vm_name}.vmdk"
+        disk_spec.device.capacityInKB = disk_size_gb * 1024 * 1024
+        disk_spec.device.controllerKey = 1000
+        disk_spec.device.unitNumber = 0
+        device_changes.append(disk_spec)
+
+        # 添加网络适配器（如果提供）
+        if network:
+            nic_spec = vim.vm.device.VirtualDeviceSpec()
+            nic_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
+            nic_spec.device = vim.vm.device.VirtualVmxnet3()
+            nic_spec.device.key = 4000
+            nic_spec.device.deviceInfo = vim.Description()
+            nic_spec.device.deviceInfo.label = "Network Adapter 1"
+            nic_spec.device.deviceInfo.summary = network.name
+            nic_spec.device.backing = vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
+            nic_spec.device.backing.network = network
+            nic_spec.device.backing.deviceName = network.name
+            nic_spec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
+            nic_spec.device.connectable.startConnected = True
+            nic_spec.device.connectable.allowGuestControl = True
+            nic_spec.device.connectable.connected = True
+            device_changes.append(nic_spec)
+
+        config.deviceChange = device_changes
+
+        # 创建虚拟机
+        vm_folder = datacenter.vmFolder
+        task = vm_folder.CreateVM_Task(config=config, pool=resource_pool)
+
+        if wait:
+            self.wait_for_task(task)
+            logger.info(f"虚拟机 {vm_name} 创建成功")
+
+        return task
+
+    def clone_vm(
+        self,
+        source_vm: vim.VirtualMachine,
+        clone_name: str,
+        datacenter: vim.Datacenter,
+        resource_pool: vim.ResourcePool,
+        datastore: Optional[vim.Datastore] = None,
+        power_on: bool = False,
+        template: bool = False,
+        wait: bool = True,
+    ) -> vim.Task:
+        """
+        克隆虚拟机
+
+        Args:
+            source_vm: 源虚拟机对象
+            clone_name: 克隆虚拟机名称
+            datacenter: 数据中心对象
+            resource_pool: 资源池对象
+            datastore: 数据存储对象（可选，默认使用源虚拟机的数据存储）
+            power_on: 克隆后是否自动开机
+            template: 是否克隆为模板
+            wait: 是否等待任务完成
+
+        Returns:
+            vim.Task: 任务对象
+
+        Example:
+            # 查找源虚拟机
+            source_vm = client.find_vm_by_name("template-vm")
+
+            # 获取必要的对象
+            datacenters = client.get_datacenters()
+            datacenter = datacenters[0]
+
+            clusters = client.get_clusters(datacenter)
+            resource_pool = clusters[0].resourcePool
+
+            # 克隆虚拟机
+            task = client.clone_vm(
+                source_vm=source_vm,
+                clone_name="cloned-vm",
+                datacenter=datacenter,
+                resource_pool=resource_pool,
+                power_on=True
+            )
+        """
+        logger.info(f"正在克隆虚拟机: {source_vm.name} -> {clone_name}")
+
+        # 克隆规格
+        clone_spec = vim.vm.CloneSpec()
+        clone_spec.powerOn = power_on
+        clone_spec.template = template
+
+        # 位置规格
+        relocate_spec = vim.vm.RelocateSpec()
+        relocate_spec.pool = resource_pool
+
+        if datastore:
+            relocate_spec.datastore = datastore
+
+        clone_spec.location = relocate_spec
+
+        # 克隆虚拟机
+        vm_folder = datacenter.vmFolder
+        task = source_vm.CloneVM_Task(folder=vm_folder, name=clone_name, spec=clone_spec)
+
+        if wait:
+            self.wait_for_task(task)
+            logger.info(f"虚拟机克隆成功: {clone_name}")
+
+        return task
+    '''
+
     def __enter__(self):
         """上下文管理器入口"""
         self.connect()
