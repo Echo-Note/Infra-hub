@@ -25,4 +25,3 @@ elif [[ "$action" == "sleep" ]];then
 else
     python manage.py "${action}" "${service}"
 fi
-

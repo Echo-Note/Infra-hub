@@ -14,16 +14,17 @@ from django.forms.utils import from_current_timezone
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext_lazy as _
+
 from django_filters import rest_framework as filters
 from django_filters.fields import MultipleChoiceField
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.filters import BaseFilterBackend
 
-from apps.common.base.magic import timeit, count_sql_queries
+from apps.common.base.magic import count_sql_queries, timeit
 from apps.common.cache.storage import CommonResourceIDsCache
 from apps.common.core.db.utils import RelatedManager
 from apps.common.utils import get_logger
-from apps.system.models import UserInfo, DataPermission, ModeTypeAbstract, DeptInfo, ModelLabelField
+from apps.system.models import DataPermission, DeptInfo, ModelLabelField, ModeTypeAbstract, UserInfo
 
 logger = get_logger(__name__)
 
@@ -35,8 +36,8 @@ def get_filter_q_base(model, permission, user_obj=None, dept_obj=None):
         if len(obj.rules) == 1:
             obj.mode_type = ModeTypeAbstract.ModeChoices.OR
         for rule in obj.rules:
-            if rule.get('table') in [model._meta.label_lower, "*"]:
-                if rule.get('type') == ModelLabelField.KeyChoices.ALL:
+            if rule.get("table") in [model._meta.label_lower, "*"]:
+                if rule.get("type") == ModelLabelField.KeyChoices.ALL:
                     if obj.mode_type == ModeTypeAbstract.ModeChoices.AND:  # 且模式，存在*，则忽略该规则
                         continue
                     else:  # 或模式，存在* 则该规则表仅*生效
@@ -44,72 +45,77 @@ def get_filter_q_base(model, permission, user_obj=None, dept_obj=None):
                         break
                 rules.append(rule)
         if rules:
-            results.append({'mode': obj.mode_type, 'rules': rules})
+            results.append({"mode": obj.mode_type, "rules": rules})
     or_qs = []
     if not results:
         return Q(id=0)
     for result in results:
-        for rule in result.get('rules'):
-            f_type = rule.get('type')
+        for rule in result.get("rules"):
+            f_type = rule.get("type")
             if f_type == ModelLabelField.KeyChoices.OWNER:
                 if user_obj:
-                    rule['value'] = user_obj.id
+                    rule["value"] = user_obj.id
                 else:
-                    rule['value'] = '0'
+                    rule["value"] = "0"
             elif f_type == ModelLabelField.KeyChoices.OWNER_DEPARTMENT:
                 if user_obj:
-                    rule['value'] = str(user_obj.dept_id)
+                    rule["value"] = str(user_obj.dept_id)
                 else:
-                    rule['value'] = '0'
+                    rule["value"] = "0"
             elif f_type == ModelLabelField.KeyChoices.OWNER_DEPARTMENTS:
-                rule['match'] = 'in'
+                rule["match"] = "in"
                 if dept_obj:
-                    rule['value'] = DeptInfo.recursion_dept_info(dept_obj.pk)
+                    rule["value"] = DeptInfo.recursion_dept_info(dept_obj.pk)
                 else:
-                    rule['value'] = []
+                    rule["value"] = []
             elif f_type == ModelLabelField.KeyChoices.DEPARTMENTS:
-                rule['match'] = 'in'
+                rule["match"] = "in"
                 if dept_obj:
-                    rule['value'] = DeptInfo.recursion_dept_info(json.loads(rule['value']))
+                    rule["value"] = DeptInfo.recursion_dept_info(json.loads(rule["value"]))
                 else:
-                    rule['value'] = []
+                    rule["value"] = []
             elif f_type == ModelLabelField.KeyChoices.ALL:
-                rule['match'] = 'all'
-                if ModeTypeAbstract.ModeChoices.OR == result.get('mode'):
+                rule["match"] = "all"
+                if ModeTypeAbstract.ModeChoices.OR == result.get("mode"):
                     if (dept_obj and dept_obj.mode_type == ModeTypeAbstract.ModeChoices.OR) or not dept_obj:
                         logger.info(f"{model._meta.label_lower} : all queryset")
                         return Q()  # 全部数据直接返回 queryset
             elif f_type == ModelLabelField.KeyChoices.DATE:
-                val = json.loads(rule['value'])
+                val = json.loads(rule["value"])
                 if val < 0:
-                    rule['value'] = timezone.now() - datetime.timedelta(seconds=-val)
+                    rule["value"] = timezone.now() - datetime.timedelta(seconds=-val)
                 else:
-                    rule['value'] = timezone.now() + datetime.timedelta(seconds=val)
+                    rule["value"] = timezone.now() + datetime.timedelta(seconds=val)
             elif f_type == ModelLabelField.KeyChoices.DATETIME_RANGE:
-                if isinstance(rule['value'], list) and len(rule['value']) == 2:
-                    rule['value'] = [from_current_timezone(parse_datetime(rule['value'][0])),
-                                     from_current_timezone(parse_datetime(rule['value'][1]))]
+                if isinstance(rule["value"], list) and len(rule["value"]) == 2:
+                    rule["value"] = [
+                        from_current_timezone(parse_datetime(rule["value"][0])),
+                        from_current_timezone(parse_datetime(rule["value"][1])),
+                    ]
             elif f_type == ModelLabelField.KeyChoices.DATETIME:
-                if isinstance(rule['value'], str):
-                    rule['value'] = from_current_timezone(parse_datetime(rule['value']))
-            elif f_type in [ModelLabelField.KeyChoices.TABLE_USER,
-                            ModelLabelField.KeyChoices.TABLE_MENU, ModelLabelField.KeyChoices.TABLE_ROLE,
-                            ModelLabelField.KeyChoices.TABLE_DEPT]:
+                if isinstance(rule["value"], str):
+                    rule["value"] = from_current_timezone(parse_datetime(rule["value"]))
+            elif f_type in [
+                ModelLabelField.KeyChoices.TABLE_USER,
+                ModelLabelField.KeyChoices.TABLE_MENU,
+                ModelLabelField.KeyChoices.TABLE_ROLE,
+                ModelLabelField.KeyChoices.TABLE_DEPT,
+            ]:
                 value = []
-                for item in json.loads(rule['value']):
-                    if isinstance(item, dict) and 'pk' in item:
-                        value.append(item['pk'])
+                for item in json.loads(rule["value"]):
+                    if isinstance(item, dict) and "pk" in item:
+                        value.append(item["pk"])
                     else:
                         value.append(item)
-                rule['value'] = value
+                rule["value"] = value
             elif f_type == ModelLabelField.KeyChoices.JSON:
-                rule['value'] = json.loads(rule['value'])
-            rule.pop('type', None)
+                rule["value"] = json.loads(rule["value"])
+            rule.pop("type", None)
 
         #  ((0, '或模式'), (1, '且模式'))
-        qs = RelatedManager.get_filter_attrs_qs(result.get('rules'))
+        qs = RelatedManager.get_filter_attrs_qs(result.get("rules"))
         q = Q()
-        if result.get('mode') == ModeTypeAbstract.ModeChoices.AND:
+        if result.get("mode") == ModeTypeAbstract.ModeChoices.AND:
             for a in set(qs):
                 if a == Q():
                     continue
@@ -163,7 +169,7 @@ def get_filter_queryset(queryset: QuerySet, user_obj: UserInfo):
 
     dept_obj = user_obj.dept
     q = Q()
-    dq = Q(menu__isnull=True) | Q(menu__isnull=False, menu__pk=getattr(user_obj, 'menu', None))
+    dq = Q(menu__isnull=True) | Q(menu__isnull=False, menu__pk=getattr(user_obj, "menu", None))
     has_dept = False
     if dept_obj:
         # 存在部门，递归获取部门，类似树结构，部门权限需要且模式，将获取到的所有部门的数据规则通过且操作
@@ -218,14 +224,14 @@ class BaseDataPermissionFilter(BaseFilterBackend):
 
 
 class BaseFilterSet(filters.FilterSet):
-    pk = filters.NumberFilter(field_name='id')
-    spm = filters.CharFilter(field_name='spm', method='get_spm_filter')
-    creator = filters.NumberFilter(field_name='creator')
-    modifier = filters.NumberFilter(field_name='modifier')
-    dept_belong = filters.UUIDFilter(field_name='dept_belong')
-    created_time = filters.DateTimeFromToRangeFilter(field_name='created_time')
-    updated_time = filters.DateTimeFromToRangeFilter(field_name='updated_time')
-    description = filters.CharFilter(field_name='description', lookup_expr='icontains')
+    pk = filters.NumberFilter(field_name="id")
+    spm = filters.CharFilter(field_name="spm", method="get_spm_filter")
+    creator = filters.NumberFilter(field_name="creator")
+    modifier = filters.NumberFilter(field_name="modifier")
+    dept_belong = filters.UUIDFilter(field_name="dept_belong")
+    created_time = filters.DateTimeFromToRangeFilter(field_name="created_time")
+    updated_time = filters.DateTimeFromToRangeFilter(field_name="updated_time")
+    description = filters.CharFilter(field_name="description", lookup_expr="icontains")
 
     def get_spm_filter(self, queryset, name, value):
         pks = CommonResourceIDsCache(value).get_storage_cache()
@@ -248,5 +254,5 @@ class PkMultipleFilter(filters.MultipleChoiceFilter):
     field_class = PkMultipleChoiceField
 
     def __init__(self, **kwargs):
-        self.input_type = kwargs.pop('input_type', None)
+        self.input_type = kwargs.pop("input_type", None)
         super().__init__(**kwargs)

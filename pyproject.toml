@@ -1,8 +1,13 @@
 [project]
 name = "infra-hub"
 version = "0.1.0"
-description = "Add your description here"
+description = "基于 xadmin 二次开发的虚拟化平台主机管理系统"
+readme = "README.md"
 requires-python = ">=3.12"
+authors = [
+    { name = "nrgao" }
+]
+license = { text = "MIT" }
 dependencies = [
     "aiofiles==24.1.0",
     "alibabacloud-dysmsapi20170525==4.2.0",
@@ -47,4 +52,66 @@ dependencies = [
     "user-agents==2.2.0",
     "uvicorn==0.38.0",
     "websockets==15.0.1",
+    "pyvmomi>=8.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit>=3.5.0",
+    "black>=24.0.0",
+    "isort>=5.13.0",
+    "flake8>=7.0.0",
+    "flake8-bugbear>=23.0.0",
+    "flake8-comprehensions>=3.14.0",
+    "django-upgrade>=1.21.0",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | migrations
+  | static
+  | media
+  | data
+  | tmp
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+skip_gitignore = true
+known_first_party = ["apps", "server"]
+known_django = ["django"]
+sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip = ["migrations", "static", "media", "data", "tmp"]
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = ["E203", "W503", "E501"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "*/migrations/*",
+    "static",
+    "media",
+    "data",
+    "tmp",
+    ".venv",
+    "venv",
+]
+per-file-ignores = [
+    "__init__.py:F401",
 ]

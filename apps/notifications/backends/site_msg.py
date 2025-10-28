@@ -1,9 +1,10 @@
 from apps.notifications.message import SiteMessageUtil as Client
+
 from .base import BackendBase
 
 
 class SiteMessage(BackendBase):
-    account_field = 'id'
+    account_field = "id"
 
     def send_msg(self, users, message, subject, **kwargs):
         accounts, __, __ = self.get_accounts(users)

@@ -5,12 +5,12 @@ from functools import cached_property
 import chardet
 import unicodecsv
 
-from .base import BaseFileParser
 from ..const import CSV_FILE_ESCAPE_CHARS
+from .base import BaseFileParser
 
 
 class CSVFileParser(BaseFileParser):
-    media_type = 'text/csv'
+    media_type = "text/csv"
 
     @cached_property
     def match_escape_chars(self):

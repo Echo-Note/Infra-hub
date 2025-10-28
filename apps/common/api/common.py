@@ -9,9 +9,10 @@ import uuid
 
 from django.core.cache import cache
 from django.utils import translation
-from drf_spectacular.plumbing import build_object_type, build_basic_type, build_array_type
+
+from drf_spectacular.plumbing import build_array_type, build_basic_type, build_object_type
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiRequest, OpenApiResponse
+from drf_spectacular.utils import OpenApiRequest, OpenApiResponse, extend_schema
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -29,17 +30,17 @@ class ResourcesIDCacheAPIView(GenericAPIView):
     @extend_schema(
         request=OpenApiRequest(
             build_object_type(
-                properties={'resources': build_array_type(build_basic_type(OpenApiTypes.STR))},
-                required=['resources'],
-                description="主键列表"
+                properties={"resources": build_array_type(build_basic_type(OpenApiTypes.STR))},
+                required=["resources"],
+                description="主键列表",
             )
         ),
-        responses=get_default_response_schema({'spm': build_basic_type(OpenApiTypes.STR)})
+        responses=get_default_response_schema({"spm": build_basic_type(OpenApiTypes.STR)}),
     )
     def post(self, request, *args, **kwargs):
         """添加临时资源数据"""
         spm = str(uuid.uuid4())
-        resources = request.data.get('resources')
+        resources = request.data.get("resources")
         if resources is not None:
             CommonResourceIDsCache(spm).set_storage_cache(resources, 300)
         return ApiResponse(spm=spm)
@@ -47,18 +48,19 @@ class ResourcesIDCacheAPIView(GenericAPIView):
 
 class CountryListAPIView(GenericAPIView):
     """城市列表"""
+
     permission_classes = (AllowAny,)
 
     @extend_schema(
         responses=get_default_response_schema(
             {
-                'data': build_array_type(
+                "data": build_array_type(
                     build_object_type(
                         properties={
-                            'name': build_basic_type(OpenApiTypes.STR),
-                            'phone_code': build_basic_type(OpenApiTypes.STR),
-                            'flag': build_basic_type(OpenApiTypes.STR),
-                            'code': build_basic_type(OpenApiTypes.STR)
+                            "name": build_basic_type(OpenApiTypes.STR),
+                            "phone_code": build_basic_type(OpenApiTypes.STR),
+                            "flag": build_basic_type(OpenApiTypes.STR),
+                            "code": build_basic_type(OpenApiTypes.STR),
                         }
                     )
                 )
@@ -68,7 +70,7 @@ class CountryListAPIView(GenericAPIView):
     def get(self, request, *args, **kwargs):
         """获取城市手机号列表"""
         current_lang = translation.get_language()
-        if current_lang == 'zh-hans':
+        if current_lang == "zh-hans":
             return ApiResponse(data=COUNTRY_CALLING_CODES_ZH)
         else:
             return ApiResponse(data=COUNTRY_CALLING_CODES)
@@ -76,6 +78,7 @@ class CountryListAPIView(GenericAPIView):
 
 class HealthCheckAPIView(GenericAPIView):
     """获取服务健康状态"""
+
     permission_classes = (AllowAny,)
 
     @staticmethod
@@ -90,18 +93,18 @@ class HealthCheckAPIView(GenericAPIView):
 
     @staticmethod
     def get_redis_status():
-        key = 'HEALTH_CHECK'
+        key = "HEALTH_CHECK"
 
         t1 = time.time()
         try:
-            value = '1'
-            cache.set(key, '1', 10)
+            value = "1"
+            cache.set(key, "1", 10)
             got = cache.get(key)
             t2 = time.time()
 
             if value == got:
                 return True, t2 - t1
-            return False, 'Value not match'
+            return False, "Value not match"
         except Exception as e:
             return False, str(e)
 
@@ -110,12 +113,12 @@ class HealthCheckAPIView(GenericAPIView):
             200: OpenApiResponse(
                 build_object_type(
                     properties={
-                        'status': build_basic_type(OpenApiTypes.BOOL),
-                        'db_status': build_basic_type(OpenApiTypes.BOOL),
-                        'redis_status': build_basic_type(OpenApiTypes.BOOL),
-                        'time': build_basic_type(OpenApiTypes.FLOAT),
-                        'db_time': build_basic_type(OpenApiTypes.FLOAT),
-                        'redis_time': build_basic_type(OpenApiTypes.FLOAT),
+                        "status": build_basic_type(OpenApiTypes.BOOL),
+                        "db_status": build_basic_type(OpenApiTypes.BOOL),
+                        "redis_status": build_basic_type(OpenApiTypes.BOOL),
+                        "time": build_basic_type(OpenApiTypes.FLOAT),
+                        "db_time": build_basic_type(OpenApiTypes.FLOAT),
+                        "redis_time": build_basic_type(OpenApiTypes.FLOAT),
                     }
                 )
             )
@@ -127,11 +130,11 @@ class HealthCheckAPIView(GenericAPIView):
         db_status, db_time = self.get_db_status()
         status = all([redis_status, db_status])
         data = {
-            'status': status,
-            'db_status': db_status,
-            'redis_status': redis_status,
-            'time': int(time.time()),
-            'db_time': db_time,
-            'redis_time': redis_time,
+            "status": status,
+            "db_status": db_status,
+            "redis_status": redis_status,
+            "time": int(time.time()),
+            "db_time": db_time,
+            "redis_time": redis_time,
         }
         return Response(data)

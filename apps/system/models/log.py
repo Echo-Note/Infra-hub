@@ -30,13 +30,14 @@ class UserLoginLog(DbAuditModel):
     system = models.CharField(max_length=64, verbose_name=_("System"), null=True, blank=True)
     agent = models.CharField(max_length=128, verbose_name=_("Agent"), null=True, blank=True)
     channel_name = models.CharField(max_length=128, verbose_name=_("Channel name"), null=True, blank=True)
-    login_type = models.SmallIntegerField(default=LoginTypeChoices.USERNAME, choices=LoginTypeChoices,
-                                          verbose_name=_("Login type"))
+    login_type = models.SmallIntegerField(
+        default=LoginTypeChoices.USERNAME, choices=LoginTypeChoices, verbose_name=_("Login type")
+    )
 
     class Meta:
         verbose_name = _("User login log")
         verbose_name_plural = verbose_name
-        ordering = ('-created_time',)
+        ordering = ("-created_time",)
 
     @staticmethod
     def get_login_type(query_key):

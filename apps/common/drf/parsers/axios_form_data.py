@@ -11,6 +11,7 @@ from django.http import QueryDict
 from django.http.multipartparser import MultiPartParser as DjangoMultiPartParser
 from django.http.multipartparser import MultiPartParserError
 from django.utils.translation import gettext_lazy as _
+
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import BaseParser, DataAndFiles
 
@@ -62,16 +63,16 @@ def format_data(data: QueryDict | dict):
     """
     new_data = {}
     for key, value in data.items():
-        key_split = key.split('.')
+        key_split = key.split(".")
         if len(key_split) == 1:  # 直接key
-            if key_split[0] == 'pks':  # 用于批量操作
+            if key_split[0] == "pks":  # 用于批量操作
                 try:
                     value = data.getlist(key_split[0])
                 except:
                     value = data.get(key_split[0])
             new_data[key_split[0]] = value
         else:
-            if re.match(r'\d+', key_split[1]):  # 列表
+            if re.match(r"\d+", key_split[1]):  # 列表
                 info: list = new_data.get(key_split[0])
                 if not info:
                     new_data[key_split[0]] = [{}]
@@ -98,7 +99,8 @@ class AxiosMultiPartParser(BaseParser):
     """
     Parser for multipart form data, which may include file data.
     """
-    media_type = 'multipart/form-data'
+
+    media_type = "multipart/form-data"
 
     def parse(self, stream, media_type=None, parser_context=None):
         """
@@ -109,16 +111,16 @@ class AxiosMultiPartParser(BaseParser):
         `.files` will be a `QueryDict` containing all the form files.
         """
         parser_context = parser_context or {}
-        request = parser_context['request']
-        encoding = parser_context.get('encoding', settings.DEFAULT_CHARSET)
+        request = parser_context["request"]
+        encoding = parser_context.get("encoding", settings.DEFAULT_CHARSET)
         meta = request.META.copy()
-        meta['CONTENT_TYPE'] = media_type
+        meta["CONTENT_TYPE"] = media_type
         upload_handlers = request.upload_handlers
 
         try:
             parser = DjangoMultiPartParser(meta, stream, upload_handlers, encoding)
             data, files = parser.parse()
-            new_data = QueryDict('', mutable=True)
+            new_data = QueryDict("", mutable=True)
             for key, value in format_data(data).items():
                 if isinstance(value, list):  # list一般为manytomany, 需要通过setlist进行设置
                     new_data.setlist(key, value)

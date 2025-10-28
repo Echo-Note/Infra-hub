@@ -34,7 +34,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: nineaiyu/${{ env.REPO }}
+          images: buding317/${{ env.REPO }}
           tags: |
             type=semver,pattern={{version}}
 

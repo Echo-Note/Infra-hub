@@ -10,19 +10,27 @@ import hashlib
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.common.core.models import upload_directory_path, DbAuditModel, AutoCleanFileMixin
+from apps.common.core.models import AutoCleanFileMixin, DbAuditModel, upload_directory_path
 
 
 class UploadFile(AutoCleanFileMixin, DbAuditModel):
     filepath = models.FileField(verbose_name=_("Filepath"), null=True, blank=True, upload_to=upload_directory_path)
-    file_url = models.URLField(verbose_name=_("Internet URL"), max_length=255, blank=True, null=True,
-                               help_text=_("Usually an address accessible to the outside Internet"))
+    file_url = models.URLField(
+        verbose_name=_("Internet URL"),
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text=_("Usually an address accessible to the outside Internet"),
+    )
     filename = models.CharField(verbose_name=_("Filename"), max_length=255)
     filesize = models.IntegerField(verbose_name=_("Filesize"))
     mime_type = models.CharField(max_length=255, verbose_name=_("Mime type"))
     md5sum = models.CharField(max_length=36, verbose_name=_("File md5sum"))
-    is_tmp = models.BooleanField(verbose_name=_("Tmp file"), default=False,
-                                 help_text=_("Temporary files are automatically cleared by scheduled tasks"))
+    is_tmp = models.BooleanField(
+        verbose_name=_("Tmp file"),
+        default=False,
+        help_text=_("Temporary files are automatically cleared by scheduled tasks"),
+    )
     is_upload = models.BooleanField(verbose_name=_("Upload file"), default=False)
 
     def save(self, *args, **kwargs):

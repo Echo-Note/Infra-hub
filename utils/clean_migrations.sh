@@ -9,4 +9,3 @@ for d in *;do
         rm -f "$d"/migrations/00*
     fi
 done
-

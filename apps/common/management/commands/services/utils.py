@@ -26,7 +26,7 @@ class ServicesUtil(object):
 
     def start_and_watch(self):
         print(time.ctime())
-        print(f'server now start')
+        print(f"server now start")
         self.start()
         if self.run_daemon:
             self.show_status()
@@ -37,10 +37,10 @@ class ServicesUtil(object):
 
     def start(self):
         check_db_status = False
-        if 'gunicorn' in [service.name for service in self._services]:
+        if "gunicorn" in [service.name for service in self._services]:
             server_prepare()
             check_db_status = True
-        if not check_db_status and {'celery_default', 'beat'} & set([service.name for service in self._services]):
+        if not check_db_status and {"celery_default", "beat"} & set([service.name for service in self._services]):
             celery_prepare()
         for service in self._services:
             service: BaseService
@@ -66,7 +66,7 @@ class ServicesUtil(object):
                     break
                 time.sleep(self.check_interval)
             except KeyboardInterrupt:
-                print('Start stop services')
+                print("Start stop services")
                 break
         self.clean_up()
 
@@ -123,20 +123,20 @@ class ServicesUtil(object):
 
     @property
     def daemon_pid_filepath(self):
-        return os.path.join(TMP_DIR, 'server.pid')
+        return os.path.join(TMP_DIR, "server.pid")
 
     @property
     def daemon_log_filepath(self):
-        return os.path.join(LOG_DIR, 'server.log')
+        return os.path.join(LOG_DIR, "server.log")
 
     @property
     def daemon_context(self):
-        daemon_log_file = open(self.daemon_log_filepath, 'a')
+        daemon_log_file = open(self.daemon_log_filepath, "a")
         context = daemon.DaemonContext(
             pidfile=pidfile.TimeoutPIDLockFile(self.daemon_pid_filepath),
             signal_map={
                 signal.SIGTERM: lambda x, y: self.clean_up(),
-                signal.SIGHUP: 'terminate',
+                signal.SIGHUP: "terminate",
             },
             stdout=daemon_log_file,
             stderr=daemon_log_file,
@@ -144,4 +144,5 @@ class ServicesUtil(object):
             detach_process=True,
         )
         return context
+
     # -- end daemon --

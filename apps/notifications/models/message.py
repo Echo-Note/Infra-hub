@@ -8,7 +8,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.common.core.models import DbAuditModel, AutoCleanFileMixin
+from apps.common.core.models import AutoCleanFileMixin, DbAuditModel
 
 
 class MessageContent(AutoCleanFileMixin, DbAuditModel):
@@ -20,24 +20,26 @@ class MessageContent(AutoCleanFileMixin, DbAuditModel):
         ROLE = 4, _("Role notification")
 
     class LevelChoices(models.TextChoices):
-        DEFAULT = 'info', _("Ordinary notices")
-        PRIMARY = 'primary', _("General notices")
-        SUCCESS = 'success', _("Success notices")
-        DANGER = 'danger', _("Important notices")
+        DEFAULT = "info", _("Ordinary notices")
+        PRIMARY = "primary", _("General notices")
+        SUCCESS = "success", _("Success notices")
+        DANGER = "danger", _("Important notices")
 
     notice_user = models.ManyToManyField(
-        "system.UserInfo", through="MessageUserRead", blank=True,
-        through_fields=('notice', 'owner'), verbose_name=_("The notified user"))
-    notice_dept = models.ManyToManyField(
-        "system.DeptInfo", blank=True,
-        verbose_name=_("The notified department"))
-    notice_role = models.ManyToManyField(
-        "system.UserRole", blank=True,
-        verbose_name=_("The notified role"))
-    level = models.CharField(verbose_name=_("Notice level"), choices=LevelChoices, default=LevelChoices.DEFAULT,
-                             max_length=20)
-    notice_type = models.SmallIntegerField(verbose_name=_("Notice type"), choices=NoticeChoices,
-                                           default=NoticeChoices.USER)
+        "system.UserInfo",
+        through="MessageUserRead",
+        blank=True,
+        through_fields=("notice", "owner"),
+        verbose_name=_("The notified user"),
+    )
+    notice_dept = models.ManyToManyField("system.DeptInfo", blank=True, verbose_name=_("The notified department"))
+    notice_role = models.ManyToManyField("system.UserRole", blank=True, verbose_name=_("The notified role"))
+    level = models.CharField(
+        verbose_name=_("Notice level"), choices=LevelChoices, default=LevelChoices.DEFAULT, max_length=20
+    )
+    notice_type = models.SmallIntegerField(
+        verbose_name=_("Notice type"), choices=NoticeChoices, default=NoticeChoices.USER
+    )
     title = models.CharField(verbose_name=_("Notice title"), max_length=255)
     message = models.TextField(verbose_name=_("Notice message"), blank=True, null=True)
     extra_json = models.JSONField(verbose_name=_("Additional json data"), blank=True, null=True)
@@ -55,7 +57,7 @@ class MessageContent(AutoCleanFileMixin, DbAuditModel):
     class Meta:
         verbose_name = _("Message content")
         verbose_name_plural = verbose_name
-        ordering = ('-created_time',)
+        ordering = ("-created_time",)
 
     def __str__(self):
         return f"{self.title}-{self.get_notice_type_display()}"
@@ -67,8 +69,8 @@ class MessageUserRead(DbAuditModel):
     unread = models.BooleanField(verbose_name=_("Unread"), default=True, blank=False, db_index=True)
 
     class Meta:
-        ordering = ('-created_time',)
+        ordering = ("-created_time",)
         verbose_name = _("User read message")
         verbose_name_plural = verbose_name
-        indexes = [models.Index(fields=['owner', 'unread'])]
-        unique_together = ('owner', 'notice')
+        indexes = [models.Index(fields=["owner", "unread"])]
+        unique_together = ("owner", "notice")

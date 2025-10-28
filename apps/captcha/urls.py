@@ -1,4 +1,4 @@
-from django.urls import re_path
+from django.urls import path, re_path
 
 from apps.captcha import views
 
@@ -16,5 +16,5 @@ urlpatterns = [
         kwargs={"scale": 2},
     ),
     re_path(r"audio/(?P<key>\w+).wav$", views.captcha_audio, name="captcha-audio"),
-    re_path(r"refresh/$", views.captcha_refresh, name="captcha-refresh"),
+    path("refresh/", views.captcha_refresh, name="captcha-refresh"),
 ]

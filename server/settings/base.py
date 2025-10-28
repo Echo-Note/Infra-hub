@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+
 import os
 
 from ..const import CONFIG, PROJECT_DIR
@@ -53,66 +54,66 @@ XADMIN_APPS = CONFIG.XADMIN_APPS
 DB_PREFIX = CONFIG.DB_PREFIX
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'apps.system.apps.SystemConfig',  # 系统管理
-    'apps.settings.apps.SettingsConfig',  # 设置相关
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "apps.system.apps.SystemConfig",  # 系统管理
+    "apps.settings.apps.SettingsConfig",  # 设置相关
     "apps.notifications.apps.NotificationsConfig",  # 消息通知相关
-    'apps.captcha.apps.CaptchaConfig',  # 图片验证码
-    'apps.message.apps.MessageConfig',  # websocket 消息
-    'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
-    'corsheaders',
-    'rest_framework',
-    'django_filters',
-    'django_celery_results',
-    'django_celery_beat',
-    'imagekit',
-    'drf_spectacular',
-    'drf_spectacular_sidecar',
+    "apps.captcha.apps.CaptchaConfig",  # 图片验证码
+    "apps.message.apps.MessageConfig",  # websocket 消息
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    "corsheaders",
+    "rest_framework",
+    "django_filters",
+    "django_celery_results",
+    "django_celery_beat",
+    "imagekit",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     *XADMIN_APPS,
-    'apps.common.apps.CommonConfig',  # 这个放到最后, django ready
+    "apps.virt_center.apps.VirtCenterConfig",  # 虚拟化中心'
+    "apps.common.apps.CommonConfig",  # 这个放到最后, django ready
 ]
 
 if DEBUG or DEBUG_DEV:
-    INSTALLED_APPS.insert(0, 'daphne')  # 支持websocket
+    INSTALLED_APPS.insert(0, "daphne")  # 支持websocket
 
 MIDDLEWARE = [
-    'server.middleware.StartMiddleware',
-    'server.middleware.RequestMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
+    "server.middleware.StartMiddleware",
+    "server.middleware.RequestMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     # 'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'server.middleware.RefererCheckMiddleware',
-    'server.middleware.SQLCountMiddleware',
-    'apps.common.core.middleware.ApiLoggingMiddleware',
-    'server.middleware.EndMiddleware'
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "server.middleware.RefererCheckMiddleware",
+    "server.middleware.SQLCountMiddleware",
+    "apps.common.core.middleware.ApiLoggingMiddleware",
+    "server.middleware.EndMiddleware",
 ]
 
-ROOT_URLCONF = 'server.urls'
+ROOT_URLCONF = "server.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(PROJECT_DIR, 'templates')]
-        ,
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [os.path.join(PROJECT_DIR, "templates")],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -156,31 +157,31 @@ CACHES = {
 
 DB_OPTIONS = {}
 DB_ENGINE = CONFIG.DB_ENGINE.lower()
-if DB_ENGINE in ['mysql', 'oracle', 'postgresql', 'sqlite3']:
-    ENGINE = 'django.db.backends.{}'.format(DB_ENGINE)
-elif DB_ENGINE == 'vastbase':
-    ENGINE = 'django_vastbase_backend'
+if DB_ENGINE in ["mysql", "oracle", "postgresql", "sqlite3"]:
+    ENGINE = "django.db.backends.{}".format(DB_ENGINE)
+elif DB_ENGINE == "vastbase":
+    ENGINE = "django_vastbase_backend"
 else:
     ENGINE = CONFIG.DB_ENGINE
 
 DATABASES = {
-    'default': {
-        'ENGINE': ENGINE,
-        'NAME': CONFIG.DB_DATABASE,
-        'HOST': CONFIG.DB_HOST,
-        'PORT': CONFIG.DB_PORT,
-        'USER': CONFIG.DB_USER,
-        'PASSWORD': CONFIG.DB_PASSWORD,
-        'ATOMIC_REQUESTS': True,
-        'CONN_MAX_AGE': 600,
-        'OPTIONS': DB_OPTIONS
+    "default": {
+        "ENGINE": ENGINE,
+        "NAME": CONFIG.DB_DATABASE,
+        "HOST": CONFIG.DB_HOST,
+        "PORT": CONFIG.DB_PORT,
+        "USER": CONFIG.DB_USER,
+        "PASSWORD": CONFIG.DB_PASSWORD,
+        "ATOMIC_REQUESTS": True,
+        "CONN_MAX_AGE": 600,
+        "OPTIONS": DB_OPTIONS,
     }
 }
 
-if DB_ENGINE == 'mysql':
-    DB_OPTIONS['init_command'] = "SET sql_mode='STRICT_TRANS_TABLES'"
-    DB_OPTIONS['charset'] = "utf8mb4"
-    DB_OPTIONS['collation'] = "utf8mb4_bin"
+if DB_ENGINE == "mysql":
+    DB_OPTIONS["init_command"] = "SET sql_mode='STRICT_TRANS_TABLES'"
+    DB_OPTIONS["charset"] = "utf8mb4"
+    DB_OPTIONS["collation"] = "utf8mb4_bin"
 
 # https://docs.djangoproject.com/zh-hans/5.0/topics/db/multi-db/#automatic-database-routing
 # 读写分离 可能会出现 the current database router prevents this relation.
@@ -193,14 +194,14 @@ if DB_ENGINE == 'mysql':
 # >>> p = Person(name="Fred")
 # >>> p.save(using="second")  # (statement 2)
 
-DATABASE_ROUTERS = ['apps.common.core.db.router.DBRouter']
+DATABASE_ROUTERS = ["apps.common.core.db.router.DBRouter"]
 
 # websocket 消息需要用到redis的消息发布订阅
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "apps.common.cache.channel.RedisChannelLayer",
         # "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
-        "CONFIG":  {
+        "CONFIG": {
             "hosts": [f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{CHANNEL_LAYERS_CACHE_ID}"],
         },
     },
@@ -211,16 +212,16 @@ CHANNEL_LAYERS = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -241,7 +242,7 @@ AUTH_USER_MODEL = "system.UserInfo"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'api/static/'
+STATIC_URL = "api/static/"
 DATA_DIR = os.path.join(PROJECT_DIR, "data")
 STATIC_ROOT = os.path.join(DATA_DIR, "static")
 
@@ -266,23 +267,23 @@ FILE_UPLOAD_HANDLERS = [
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # I18N translation
 LOCALE_PATHS = [
-    os.path.join(PROJECT_DIR, 'locale'),
+    os.path.join(PROJECT_DIR, "locale"),
 ]
 
 CACHE_KEY_TEMPLATE = {
-    'config_key': 'config',
-    'make_token_key': 'make_token',
-    'download_url_key': 'download_url',
-    'pending_state_key': 'pending_state',
-    'websocket_group_key': 'websocket_group',
-    'upload_part_info_key': 'upload_part_info',
-    'black_access_token_key': 'black_access_token',
-    'common_resource_ids_key': 'common_resource_ids',
-    'websocket_message_result_key': 'websocket_message_result'
+    "config_key": "config",
+    "make_token_key": "make_token",
+    "download_url_key": "download_url",
+    "pending_state_key": "pending_state",
+    "websocket_group_key": "websocket_group",
+    "upload_part_info_key": "upload_part_info",
+    "black_access_token_key": "black_access_token",
+    "common_resource_ids_key": "common_resource_ids",
+    "websocket_message_result_key": "websocket_message_result",
 }
 
 APPEND_SLASH = False
