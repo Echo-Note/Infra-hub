@@ -37,6 +37,7 @@ urlpatterns = [
     path("api/system/", include("apps.system.urls", namespace="system")),
     path("api/settings/", include("apps.settings.urls", namespace="settings")),
     path("api/notifications/", include("apps.notifications.urls", namespace="notifications")),
+    path("api/virt_center/", include("apps.virt_center.urls", namespace="virt_center")),
     re_path("^api/flower/(?P<path>.*)$", CeleryFlowerAPIView.as_view(), name="flower-view"),
     # media路径配置 开发环境可以启动下面配置，正式环境需要让nginx读取资源，无需进行转发
     re_path("^media/(?P<path>.*)$", media_serve, {"document_root": settings.MEDIA_ROOT}),
