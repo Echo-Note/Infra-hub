@@ -8,13 +8,14 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from apps.common.utils import get_logger
-from apps.virt_center.models import Platform
+from apps.virt_center.models import Platform, PlatformCredential
 from apps.virt_center.notifications import (
     PlatformStatusChangedMessage,
     PlatformSyncFailedMessage,
     PlatformSyncSuccessMessage,
 )
 from apps.virt_center.signal import platform_status_changed, platform_sync_completed, platform_sync_failed
+from apps.virt_center.utils.throttle import SyncTaskThrottle
 
 logger = get_logger(__name__)
 
@@ -42,15 +43,27 @@ def auto_sync_platform_on_created(sender, instance, created, **kwargs):
         logger.warning(f"平台 {instance.name} 没有配置认证凭据，跳过自动同步")
         return
 
+    # 限流检查
+    throttle = SyncTaskThrottle(str(instance.id))
+    if not throttle.is_allowed():
+        remaining_time = throttle.get_remaining_time()
+        logger.info(f"平台 {instance.name} 同步任务触发受限，" f"请在 {remaining_time} 秒后重试或手动触发")
+        return
+
     try:
         # 延迟导入避免循环依赖
         from apps.virt_center.tasks import sync_all_platform_data
+
+        # 标记任务已执行，开始限流
+        throttle.mark_executed()
 
         # 异步执行同步任务
         result = sync_all_platform_data.delay(str(instance.id))
         logger.info(f"平台 {instance.name} 创建成功，已触发自动同步任务: {result.id}")
 
     except Exception as e:
+        # 如果触发失败，清除限流标记，允许重试
+        throttle.clear_limit()
         logger.error(f"触发平台 {instance.name} 自动同步失败: {str(e)}")
 
 
@@ -112,3 +125,50 @@ def on_platform_status_changed(sender, platform_id, old_status, new_status, **kw
         logger.warning(f"平台 {platform_id} 不存在，无法发送状态变化通知")
     except Exception as e:
         logger.error(f"发送状态变化通知失败: {str(e)}")
+
+
+@receiver(post_save, sender=PlatformCredential)
+def auto_sync_on_credential_updated(sender, instance, created, **kwargs):
+    """
+    凭据创建或更新时触发同步任务（带限流）
+
+    限流策略：
+    - 同一平台5分钟内只触发一次同步
+    - 使用 Redis 缓存记录最后触发时间
+
+    Args:
+        sender: 发送信号的模型类
+        instance: PlatformCredential 实例
+        created: 是否为新创建
+    """
+    platform = instance.platform
+
+    # 只有启用的平台才自动同步
+    if not platform.is_active:
+        logger.info(f"平台 {platform.name} 未启用，跳过自动同步")
+        return
+
+    # 限流检查
+    throttle = SyncTaskThrottle(str(platform.id))
+    if not throttle.is_allowed():
+        remaining_time = throttle.get_remaining_time()
+        logger.info(f"平台 {platform.name} 同步任务触发受限，" f"请在 {remaining_time} 秒后重试或手动触发")
+        return
+
+    try:
+        # 延迟导入避免循环依赖
+        from apps.virt_center.tasks import sync_all_platform_data
+
+        # 标记任务已执行，开始限流
+        throttle.mark_executed()
+
+        # 异步执行同步任务
+        result = sync_all_platform_data.delay(str(platform.id))
+
+        action = "创建" if created else "更新"
+        logger.info(f"平台 {platform.name} 凭据{action}成功，" f"已触发自动同步任务: {result.id}")
+
+    except Exception as e:
+        # 如果触发失败，清除限流标记，允许重试
+        throttle.clear_limit()
+        logger.error(f"触发平台 {platform.name} 自动同步失败: {str(e)}")

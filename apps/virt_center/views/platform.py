@@ -12,8 +12,8 @@ from rest_framework.decorators import action
 from apps.common.core.modelset import BaseModelSet
 from apps.common.core.response import ApiResponse
 from apps.common.swagger.utils import get_default_response_schema
-from apps.virt_center.models import Platform
-from apps.virt_center.serializers import PlatformSerializer
+from apps.virt_center.models import Platform, PlatformCredential
+from apps.virt_center.serializers import PlatformCredentialSerializer, PlatformSerializer
 from apps.virt_center.tasks import sync_all_platform_data
 
 
@@ -95,3 +95,52 @@ class PlatformViewSet(BaseModelSet):
                 msg=_("Failed to start sync task"),
                 data={"error": str(e)},
             )
+
+    @extend_schema(
+        request=PlatformCredentialSerializer,
+        responses=get_default_response_schema(),
+    )
+    @action(methods=["GET", "POST", "PUT"], detail=True, url_path="credential")
+    def manage_credential(self, request, *args, **kwargs):
+        """管理平台凭据"""
+        platform = self.get_object()
+
+        if request.method == "GET":
+            # 获取凭据
+            try:
+                credential = platform.credential
+                serializer = PlatformCredentialSerializer(credential)
+                return ApiResponse(data=serializer.data, msg=_("Get credential success"))
+            except PlatformCredential.DoesNotExist:
+                return ApiResponse(
+                    code=1001,
+                    msg=_("Credential not found"),
+                    data={"has_credential": False},
+                )
+
+        elif request.method == "POST":
+            # 创建凭据
+            if hasattr(platform, "credential"):
+                return ApiResponse(
+                    code=1001,
+                    msg=_("Credential already exists, use PUT to update"),
+                )
+
+            serializer = PlatformCredentialSerializer(data={**request.data, "platform": platform.id})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return ApiResponse(data=serializer.data, msg=_("Credential created"))
+
+        elif request.method == "PUT":
+            # 更新凭据
+            try:
+                credential = platform.credential
+                serializer = PlatformCredentialSerializer(credential, data=request.data, partial=True)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return ApiResponse(data=serializer.data, msg=_("Credential updated"))
+            except PlatformCredential.DoesNotExist:
+                return ApiResponse(
+                    code=1001,
+                    msg=_("Credential not found, use POST to create"),
+                )

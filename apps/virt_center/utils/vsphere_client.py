@@ -304,14 +304,13 @@ def get_vsphere_client(platform) -> VSphereClient:
 
     # 获取认证凭据
     credential = platform.credential
-
-    # 解密密码
-    password = decrypt_password(credential.password) if credential.password else ""
+    logger.info(f"获取到平台认证凭据: {credential.username}")
+    logger.info(f"获取到平台认证凭据: {credential.password}")
 
     return VSphereClient(
         host=platform.host,
         username=credential.username,
-        password=password,
+        password=credential.password,  # 会自动解密
         port=platform.port,
         ssl_verify=platform.ssl_verify,
     )

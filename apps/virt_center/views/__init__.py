@@ -4,10 +4,12 @@
 虚拟化中心视图
 """
 
+from .credential import PlatformCredentialViewSet
 from .platform import PlatformViewSet
 from .sync import SyncTaskViewSet
 
 __all__ = [
     "PlatformViewSet",
+    "PlatformCredentialViewSet",
     "SyncTaskViewSet",
 ]
