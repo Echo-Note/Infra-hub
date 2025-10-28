@@ -32,6 +32,7 @@ ROUTE_IGNORE_URL = [
 
 # 访问权限配置
 PERMISSION_SHOW_PREFIX = [
+    r"api/virt_center",
     r"api/system",
     r"api/settings",
     r"api/notifications",

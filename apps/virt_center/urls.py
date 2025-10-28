@@ -10,8 +10,8 @@ from apps.virt_center.views import PlatformCredentialViewSet, PlatformViewSet, S
 
 app_name = "virt_center"
 
-# 创建路由器
-router = SimpleRouter()
+# 创建路由器，设置 trailing_slash=False 允许 URL 末尾不带斜杠
+router = SimpleRouter(trailing_slash=False)
 
 # 注册视图集
 router.register("platforms", PlatformViewSet, basename="platform")

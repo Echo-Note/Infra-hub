@@ -13,6 +13,7 @@ from apps.common.core.modelset import BaseModelSet
 from apps.common.core.response import ApiResponse
 from apps.common.swagger.utils import get_default_response_schema
 from apps.virt_center.decorators import record_operation
+from apps.virt_center.filters import PlatformFilter
 from apps.virt_center.models import Platform, PlatformCredential
 from apps.virt_center.serializers import PlatformCredentialSerializer, PlatformSerializer
 from apps.virt_center.tasks import sync_all_platform_data
@@ -24,13 +25,17 @@ class PlatformViewSet(BaseModelSet):
     queryset = Platform.objects.all()
     serializer_class = PlatformSerializer
     ordering_fields = ["created_time", "updated_time", "name"]
-    search_fields = ["name", "host", "region", "datacenter"]
-    filterset_fields = {
-        "platform_type": ["exact"],
-        "status": ["exact"],
-        "is_active": ["exact"],
-        "region": ["exact", "icontains"],
-    }
+    # search_fields 会覆盖 SearchFieldsAction 的 search_fields 方法，需要移除
+    # search_fields = ["name", "host", "region", "datacenter"]
+
+    # 搜索功能由 filterset_class 提供
+    # filterset_fields = {
+    #     "platform_type": ["exact"],
+    #     "status": ["exact"],
+    #     "is_active": ["exact"],
+    #     "region": ["exact", "icontains"],
+    # }
+    filterset_class = PlatformFilter
 
     @extend_schema(responses=get_default_response_schema())
     @action(methods=["POST"], detail=True, url_path="test-connection")
