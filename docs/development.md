@@ -299,7 +299,8 @@ python manage.py migrate virt_center 0001
 # apps/virt_center/tasks.py
 from celery import shared_task
 from apps.virt_center.models import Platform
-from apps.virt_center.utils import get_vsphere_client
+from apps.virt_center.services import get_vsphere_client
+
 
 @shared_task
 def sync_platform_data(platform_id):
@@ -400,7 +401,7 @@ python manage.py shell
 ```python
 # 在 Shell 中测试代码
 from apps.virt_center.models import Platform
-from apps.virt_center.utils import get_vsphere_client
+from apps.virt_center.services import get_vsphere_client
 
 platform = Platform.objects.first()
 client = get_vsphere_client(platform)

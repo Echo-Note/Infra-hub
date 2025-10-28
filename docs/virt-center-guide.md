@@ -66,7 +66,7 @@ credential = PlatformCredential.objects.create(
 
 ```python
 from apps.virt_center.models import Platform
-from apps.virt_center.utils import get_vsphere_client
+from apps.virt_center.services import get_vsphere_client
 
 # 获取平台
 platform = Platform.objects.get(name="生产环境 vCenter")
@@ -156,7 +156,7 @@ sync_platform_data.delay(platform_id)
 
 ```python
 from apps.virt_center.models import VirtualMachine
-from apps.virt_center.utils import get_vsphere_client
+from apps.virt_center.services import get_vsphere_client
 
 vm = VirtualMachine.objects.get(name="test-vm-01")
 platform = vm.platform
@@ -283,7 +283,7 @@ platform.save()
 
 ```python
 # 检查平台连接状态
-from apps.virt_center.utils import get_vsphere_client
+from apps.virt_center.services import get_vsphere_client
 from apps.virt_center.models import Platform
 
 platform = Platform.objects.get(id="platform-id")

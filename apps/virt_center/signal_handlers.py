@@ -14,8 +14,8 @@ from apps.virt_center.notifications import (
     PlatformSyncFailedMessage,
     PlatformSyncSuccessMessage,
 )
+from apps.virt_center.services.throttle import SyncTaskThrottle
 from apps.virt_center.signal import platform_status_changed, platform_sync_completed, platform_sync_failed
-from apps.virt_center.utils.throttle import SyncTaskThrottle
 
 logger = get_logger(__name__)
 

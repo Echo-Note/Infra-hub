@@ -12,7 +12,7 @@ services:
     container_name: xadmin-nginx
     restart: always
     volumes:
-      - ./utils/nginx.conf:/etc/nginx/nginx.conf:r
+      - ./services/nginx.conf:/etc/nginx/nginx.conf:r
       - ./data/logs:/var/log/nginx
     ports:
       - "8896:8896"
@@ -105,7 +105,7 @@ services:
       - ./:/data/xadmin-server
     #      - ${VOLUME_DIR:-.}/server/data:/data/xadmin-server/data
     healthcheck:
-      test: "bash utils/check_celery.sh"
+      test: "bash services/check_celery.sh"
       interval: 10s
       timeout: 5s
       retries: 3

@@ -145,8 +145,8 @@ CACHES = {
             "REDIS_CLIENT_KWARGS": {"health_check_interval": 30},
         },
         "TIMEOUT": 60 * 15,
-        "KEY_FUNCTION": "apps.common.base.utils.redis_key_func",
-        "REVERSE_KEY_FUNCTION": "apps.common.base.utils.redis_reverse_key_func",
+        "KEY_FUNCTION": "apps.common.base.services.redis_key_func",
+        "REVERSE_KEY_FUNCTION": "apps.common.base.services.redis_reverse_key_func",
     },
 }
 

@@ -60,10 +60,25 @@ class SyncTaskViewSet(viewsets.ViewSet):
             )
 
         try:
+            platform = Platform.objects.get(id=platform_id)
+
             # 异步执行同步任务
             result = task.delay(platform_id)
 
-            platform = Platform.objects.get(id=platform_id)
+            # 记录操作日志（简化版）
+            from apps.virt_center.models import OperationLog
+
+            OperationLog.objects.create(
+                platform=platform,
+                operator=request.user if request.user.is_authenticated else None,
+                operation_type="sync_data",
+                target_type="platform",
+                target_id=str(platform.id),
+                target_name=platform.name,
+                status=OperationLog.Status.SUCCESS,
+                result=f"任务已启动: {result.id}",
+                parameters={"sync_type": sync_type},
+            )
 
             return ApiResponse(
                 data={
@@ -90,6 +105,21 @@ class SyncTaskViewSet(viewsets.ViewSet):
         try:
             # 异步执行同步任务
             result = sync_all_platforms.delay()
+
+            # 记录操作日志
+            from apps.virt_center.models import OperationLog
+
+            OperationLog.objects.create(
+                platform=None,  # 针对所有平台
+                operator=request.user if request.user.is_authenticated else None,
+                operation_type="sync_data",
+                target_type="all_platforms",
+                target_id="all",
+                target_name="所有启用的平台",
+                status=OperationLog.Status.SUCCESS,
+                result=f"任务已启动: {result.id}",
+                parameters={"action": "sync_all_platforms"},
+            )
 
             return ApiResponse(
                 data={

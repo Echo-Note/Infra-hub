@@ -78,7 +78,7 @@ function restart() {
 
 function init_data() {
   if ${EXE} ps|grep xadmin-server|grep healthy &>/dev/null;then
-    docker exec -it xadmin-server sh -c 'python utils/init_data.py'
+    docker exec -it xadmin-server sh -c 'python services/init_data.py'
   else
     echo "error: xadmin-server not healthy"
     exit 1

@@ -10,7 +10,7 @@ from ..const import CONFIG
 from .base import CACHES, CELERY_BROKER_CACHE_ID, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, SECRET_KEY
 
 REST_FRAMEWORK = {
-    "DEFAULT_SCHEMA_CLASS": "apps.common.swagger.utils.CustomAutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "apps.common.swagger.services.CustomAutoSchema",
     "DEFAULT_RENDERER_CLASSES": (
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
@@ -179,9 +179,9 @@ SPECTACULAR_SETTINGS = {
         "displayOperationId": False,
     },
     "SERIALIZER_EXTENSIONS": [
-        "apps.common.swagger.utils.OpenApiAuthenticationScheme",
-        "apps.common.swagger.utils.OpenApiPrimaryKeyRelatedField",
-        "apps.common.swagger.utils.LabeledChoiceFieldExtension",
+        "apps.common.swagger.services.OpenApiAuthenticationScheme",
+        "apps.common.swagger.services.OpenApiPrimaryKeyRelatedField",
+        "apps.common.swagger.services.LabeledChoiceFieldExtension",
     ],
     # 'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
 }

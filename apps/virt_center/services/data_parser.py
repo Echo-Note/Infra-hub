@@ -174,6 +174,251 @@ def parse_host_info(host: vim.HostSystem) -> Dict[str, Any]:
         raise
 
 
+def parse_vm_disks(vm: vim.VirtualMachine) -> List[Dict[str, Any]]:
+    """
+    解析虚拟机磁盘信息
+
+    Args:
+        vm: vSphere 虚拟机对象
+
+    Returns:
+        磁盘信息列表
+    """
+    disks = []
+    if not vm.config or not vm.config.hardware:
+        return disks
+
+    for device in vm.config.hardware.device:
+        if not isinstance(device, vim.vm.device.VirtualDisk):
+            continue
+
+        disk_data = {
+            "label": device.deviceInfo.label if device.deviceInfo else f"Hard disk {device.key}",
+            "device_key": device.key,
+            "unit_number": device.unitNumber if hasattr(device, "unitNumber") else 0,
+            "datastore_name": (
+                device.backing.datastore.name
+                if hasattr(device.backing, "datastore") and device.backing.datastore
+                else ""
+            ),
+            "file_path": device.backing.fileName if hasattr(device.backing, "fileName") else "",
+            "capacity_gb": device.capacityInKB // (1024 * 1024) if device.capacityInKB else 0,
+            "disk_type": (
+                "thin"
+                if hasattr(device.backing, "thinProvisioned") and device.backing.thinProvisioned
+                else "thick_lazy"
+            ),
+            "disk_mode": getattr(device.backing, "diskMode", "persistent"),
+            "used_gb": 0,  # 需要从存储获取实际使用
+            "controller_key": device.controllerKey if hasattr(device, "controllerKey") else 0,
+            "controller_type": "",
+            "shares": (
+                device.storageIOAllocation.shares.shares
+                if hasattr(device, "storageIOAllocation") and device.storageIOAllocation
+                else 1000
+            ),
+        }
+        disks.append(disk_data)
+
+    return disks
+
+
+def parse_vm_networks(vm: vim.VirtualMachine) -> List[Dict[str, Any]]:
+    """
+    解析虚拟机网络信息
+
+    Args:
+        vm: vSphere 虚拟机对象
+
+    Returns:
+        网络信息列表
+    """
+    networks = []
+    if not vm.config or not vm.config.hardware:
+        return networks
+
+    for device in vm.config.hardware.device:
+        if not isinstance(device, vim.vm.device.VirtualEthernetCard):
+            continue
+
+        # 确定网络类型
+        network_type = "portgroup"
+        if isinstance(device.backing, vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo):
+            network_type = "dvportgroup"
+
+        # 确定适配器类型
+        adapter_type = "e1000"
+        if isinstance(device, vim.vm.device.VirtualVmxnet3):
+            adapter_type = "vmxnet3"
+        elif isinstance(device, vim.vm.device.VirtualE1000e):
+            adapter_type = "e1000e"
+        elif isinstance(device, vim.vm.device.VirtualVmxnet2):
+            adapter_type = "vmxnet2"
+
+        network_data = {
+            "label": device.deviceInfo.label if device.deviceInfo else f"Network adapter {device.key}",
+            "device_key": device.key,
+            "network_name": device.deviceInfo.summary if device.deviceInfo else "",
+            "network_type": network_type,
+            "adapter_type": adapter_type,
+            "mac_address": device.macAddress if hasattr(device, "macAddress") else "",
+            "mac_type": "manual" if hasattr(device, "addressType") and device.addressType == "manual" else "auto",
+            "ip_address": None,
+            "netmask": None,
+            "gateway": None,
+            "connected": device.connectable.connected if hasattr(device, "connectable") else True,
+            "start_connected": device.connectable.startConnected if hasattr(device, "connectable") else True,
+        }
+        networks.append(network_data)
+
+    return networks
+
+
+def parse_host_resource(host: vim.HostSystem) -> Dict[str, Any]:
+    """
+    解析主机资源详细信息
+
+    Args:
+        host: vSphere 主机对象
+
+    Returns:
+        资源信息字典
+    """
+    summary = host.summary
+    hardware = summary.hardware if summary else None
+    quick_stats = summary.quickStats if summary else None
+
+    return {
+        "cpu_used_mhz": quick_stats.overallCpuUsage if quick_stats and quick_stats.overallCpuUsage else 0,
+        "cpu_total_mhz": hardware.cpuMhz * hardware.numCpuCores if hardware else 0,
+        "cpu_reserved_mhz": 0,
+        "memory_used": quick_stats.overallMemoryUsage if quick_stats and quick_stats.overallMemoryUsage else 0,
+        "memory_free": (
+            (
+                hardware.memorySize // (1024 * 1024)
+                - (quick_stats.overallMemoryUsage if quick_stats and quick_stats.overallMemoryUsage else 0)
+            )
+            if hardware
+            else 0
+        ),
+        "memory_active": 0,
+        "memory_consumed": 0,
+        "storage_total": 0,
+        "storage_used": 0,
+        "storage_free": 0,
+        "storage_uncommitted": 0,
+        "network_rx_bytes": 0,
+        "network_tx_bytes": 0,
+        "network_rx_packets": 0,
+        "network_tx_packets": 0,
+        "uptime_seconds": quick_stats.uptime if quick_stats and quick_stats.uptime else 0,
+    }
+
+
+def parse_host_networks(host: vim.HostSystem) -> List[Dict[str, Any]]:
+    """
+    解析主机网络配置
+
+    Args:
+        host: vSphere 主机对象
+
+    Returns:
+        网络信息列表
+    """
+    networks = []
+    config = host.config
+    if not config or not config.network:
+        return networks
+
+    # 解析虚拟交换机
+    if hasattr(config.network, "vswitch"):
+        for vswitch in config.network.vswitch:
+            network_data = {
+                "name": vswitch.name,
+                "network_type": "vswitch",
+                "vswitch_name": vswitch.name,
+                "portgroup_name": "",
+                "physical_nics": [pnic for pnic in vswitch.pnic] if vswitch.pnic else [],
+                "vlan_id": 0,
+                "ip_address": None,
+                "netmask": None,
+                "gateway": None,
+                "mtu": vswitch.mtu if hasattr(vswitch, "mtu") else 1500,
+                "speed_mbps": 1000,
+                "vmotion_enabled": False,
+                "management_enabled": False,
+                "vsan_enabled": False,
+                "ft_enabled": False,
+                "is_active": True,
+            }
+            networks.append(network_data)
+
+    # 解析端口组
+    if hasattr(config.network, "portgroup"):
+        for portgroup in config.network.portgroup:
+            network_data = {
+                "name": portgroup.spec.name if portgroup.spec else portgroup.key,
+                "network_type": "portgroup",
+                "vswitch_name": portgroup.spec.vswitchName if portgroup.spec else "",
+                "portgroup_name": portgroup.spec.name if portgroup.spec else "",
+                "physical_nics": [],
+                "vlan_id": portgroup.spec.vlanId if portgroup.spec and hasattr(portgroup.spec, "vlanId") else 0,
+                "ip_address": None,
+                "netmask": None,
+                "gateway": None,
+                "mtu": 1500,
+                "speed_mbps": 1000,
+                "vmotion_enabled": False,
+                "management_enabled": False,
+                "vsan_enabled": False,
+                "ft_enabled": False,
+                "is_active": True,
+            }
+            networks.append(network_data)
+
+    return networks
+
+
+def parse_vm_snapshots(vm: vim.VirtualMachine) -> List[Dict[str, Any]]:
+    """
+    解析虚拟机快照信息
+
+    Args:
+        vm: vSphere 虚拟机对象
+
+    Returns:
+        快照信息列表
+    """
+    snapshots = []
+
+    if not vm.snapshot or not vm.snapshot.rootSnapshotList:
+        return snapshots
+
+    def parse_snapshot_tree(snapshot_tree, parent_id=None):
+        """递归解析快照树"""
+        for snap in snapshot_tree:
+            snapshot_data = {
+                "name": snap.name,
+                "snapshot_id": snap.id,
+                "description": snap.description or "",
+                "is_current": snap.snapshot == vm.snapshot.currentSnapshot if vm.snapshot.currentSnapshot else False,
+                "is_quiesced": snap.quiesced,
+                "is_memory": snap.replaySupported,
+                "size_mb": 0,  # 需要计算快照链大小
+                "power_state_on_snapshot": str(snap.state) if snap.state else "",
+                "snapshot_time": snap.createTime,
+                "parent_snapshot_id": parent_id,
+            }
+            snapshots.append(snapshot_data)
+
+            # 递归解析子快照
+            if snap.childSnapshotList:
+                parse_snapshot_tree(snap.childSnapshotList, snap.id)
+
+    parse_snapshot_tree(vm.snapshot.rootSnapshotList)
+    return snapshots
+
+
 def parse_vm_info(vm: vim.VirtualMachine) -> Dict[str, Any]:
     """
     解析虚拟机信息

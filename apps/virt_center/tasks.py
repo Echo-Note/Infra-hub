@@ -8,28 +8,39 @@
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from celery import group, shared_task
+from celery import shared_task
 from celery.utils.log import get_task_logger
 
 from apps.common.celery.decorator import after_app_ready_start, register_as_period_task
 
-from .models import DataStore, Host, Platform, VirtualMachine, VMTemplate
-from .signal import platform_status_changed, platform_sync_completed, platform_sync_failed
-from .utils.data_parser import (
+from .models import DataStore, Host, HostMetrics, OperationTask, Platform, VirtualMachine, VMMetrics, VMTemplate
+from .services.data_parser import (
     parse_datastore_info,
     parse_host_info,
+    parse_host_networks,
+    parse_host_resource,
     parse_platform_info,
     parse_template_info,
+    parse_vm_disks,
     parse_vm_info,
+    parse_vm_networks,
+    parse_vm_snapshots,
 )
-from .utils.sync_data import (
+from .services.operation import create_operation_task, update_operation_task_status
+from .services.sync_data import (
     sync_datastore_to_db,
+    sync_host_networks_to_db,
+    sync_host_resource_to_db,
     sync_host_to_db,
     sync_platform_to_db,
     sync_template_to_db,
+    sync_vm_disks_to_db,
+    sync_vm_networks_to_db,
+    sync_vm_snapshots_to_db,
     sync_vm_to_db,
 )
-from .utils.vsphere_client import get_vsphere_client
+from .services.vsphere_client import get_vsphere_client
+from .signal import platform_status_changed, platform_sync_completed, platform_sync_failed
 
 logger = get_task_logger(__name__)
 
@@ -152,6 +163,19 @@ def sync_hosts(self, platform_id: str):
             logger.error(f"平台不存在或未启用: {platform_id}")
             return {"success": False, "error": "平台不存在或未启用"}
 
+        # 创建任务记录
+        create_operation_task(
+            platform=platform,
+            task_type="sync_hosts",
+            task_name=f"同步平台 {platform.name} 主机信息",
+            celery_task_id=self.request.id,
+            parameters={"platform_id": platform_id},
+        )
+        update_operation_task_status(
+            celery_task_id=self.request.id,
+            status=OperationTask.Status.RUNNING,
+        )
+
         # 连接 vSphere
         client = get_vsphere_client(platform)
 
@@ -171,10 +195,18 @@ def sync_hosts(self, platform_id: str):
                         host_data = parse_host_info(host)
                         host_uuids.append(host_data["uuid"])
 
-                        # 同步到数据库
-                        sync_host_to_db(platform, host_data)
-                        synced_count += 1
+                        # 同步主机基本信息到数据库
+                        host_obj = sync_host_to_db(platform, host_data)
 
+                        # 同步主机资源详情
+                        resource_data = parse_host_resource(host)
+                        sync_host_resource_to_db(host_obj, resource_data)
+
+                        # 同步主机网络配置
+                        networks_data = parse_host_networks(host)
+                        sync_host_networks_to_db(host_obj, networks_data)
+
+                        synced_count += 1
                         logger.debug(f"同步主机成功: {host_data['name']}")
 
                     except Exception as e:
@@ -189,7 +221,7 @@ def sync_hosts(self, platform_id: str):
 
                 logger.info(f"主机同步完成: 成功={synced_count}, 失败={failed_count}")
 
-                return {
+                result_data = {
                     "success": True,
                     "platform_id": platform_id,
                     "synced_count": synced_count,
@@ -197,12 +229,32 @@ def sync_hosts(self, platform_id: str):
                     "sync_time": timezone.now().isoformat(),
                 }
 
+                # 更新任务状态为成功
+                update_operation_task_status(
+                    celery_task_id=self.request.id,
+                    status=OperationTask.Status.SUCCESS,
+                    result=result_data,
+                    progress=100,
+                )
+
+                return result_data
+
         except Exception as e:
             logger.error(f"连接或获取主机信息失败: {str(e)}")
+            update_operation_task_status(
+                celery_task_id=self.request.id,
+                status=OperationTask.Status.FAILED,
+                error_message=str(e),
+            )
             raise
 
     except Exception as exc:
         logger.error(f"同步主机信息失败: {str(exc)}")
+        update_operation_task_status(
+            celery_task_id=self.request.id,
+            status=OperationTask.Status.FAILED,
+            error_message=str(exc),
+        )
         raise self.retry(exc=exc)
 
 
@@ -254,10 +306,22 @@ def sync_vms(self, platform_id: str):
 
                         vm_uuids.append(vm_data["uuid"])
 
-                        # 同步到数据库
-                        sync_vm_to_db(platform, vm_data)
-                        synced_count += 1
+                        # 同步虚拟机基本信息到数据库
+                        vm_obj = sync_vm_to_db(platform, vm_data)
 
+                        # 同步虚拟机磁盘信息
+                        disks_data = parse_vm_disks(vm)
+                        sync_vm_disks_to_db(vm_obj, disks_data)
+
+                        # 同步虚拟机网络信息
+                        networks_data = parse_vm_networks(vm)
+                        sync_vm_networks_to_db(vm_obj, networks_data)
+
+                        # 同步虚拟机快照信息
+                        snapshots_data = parse_vm_snapshots(vm)
+                        sync_vm_snapshots_to_db(vm_obj, snapshots_data)
+
+                        synced_count += 1
                         logger.debug(f"同步虚拟机成功: {vm_data['name']}")
 
                     except Exception as e:
@@ -466,6 +530,9 @@ def sync_all_platform_data(self, platform_id: str):
     """
     logger.info(f"开始同步平台所有数据: platform_id={platform_id}")
 
+    # 创建任务记录
+    operation_task = None
+
     try:
         # 检查平台是否存在
         try:
@@ -474,17 +541,64 @@ def sync_all_platform_data(self, platform_id: str):
             logger.error(f"平台不存在或未启用: {platform_id}")
             return {"success": False, "error": "平台不存在或未启用"}
 
-        # 并行执行所有同步任务
-        job = group(
-            sync_platform_info.s(platform_id),
-            sync_hosts.s(platform_id),
-            sync_vms.s(platform_id),
-            sync_datastores.s(platform_id),
-            sync_templates.s(platform_id),
+        # 创建操作任务记录
+        operation_task = create_operation_task(
+            platform=platform,
+            task_type="sync_platform",
+            task_name=f"同步平台 {platform.name} 所有数据",
+            celery_task_id=self.request.id,
+            parameters={"platform_id": platform_id},
         )
 
-        result = job.apply_async()
-        results = result.get(timeout=600)  # 10分钟超时
+        # 更新任务状态为运行中
+        update_operation_task_status(
+            celery_task_id=self.request.id,
+            status=OperationTask.Status.RUNNING,
+            current_step="开始同步",
+        )
+
+        # 顺序执行所有同步任务（避免在任务内调用 .get()）
+        results = []
+
+        # 同步平台信息
+        try:
+            result = sync_platform_info(platform_id)
+            results.append({"task": "sync_platform_info", "result": result})
+        except Exception as e:
+            logger.error(f"同步平台信息失败: {str(e)}")
+            results.append({"task": "sync_platform_info", "error": str(e)})
+
+        # 同步主机
+        try:
+            result = sync_hosts(platform_id)
+            results.append({"task": "sync_hosts", "result": result})
+        except Exception as e:
+            logger.error(f"同步主机失败: {str(e)}")
+            results.append({"task": "sync_hosts", "error": str(e)})
+
+        # 同步虚拟机
+        try:
+            result = sync_vms(platform_id)
+            results.append({"task": "sync_vms", "result": result})
+        except Exception as e:
+            logger.error(f"同步虚拟机失败: {str(e)}")
+            results.append({"task": "sync_vms", "error": str(e)})
+
+        # 同步数据存储
+        try:
+            result = sync_datastores(platform_id)
+            results.append({"task": "sync_datastores", "result": result})
+        except Exception as e:
+            logger.error(f"同步数据存储失败: {str(e)}")
+            results.append({"task": "sync_datastores", "error": str(e)})
+
+        # 同步模板
+        try:
+            result = sync_templates(platform_id)
+            results.append({"task": "sync_templates", "result": result})
+        except Exception as e:
+            logger.error(f"同步模板失败: {str(e)}")
+            results.append({"task": "sync_templates", "error": str(e)})
 
         logger.info(f"平台所有数据同步完成: {platform.name}")
 
@@ -495,6 +609,15 @@ def sync_all_platform_data(self, platform_id: str):
             "results": results,
             "sync_time": timezone.now().isoformat(),
         }
+
+        # 更新任务状态为成功
+        update_operation_task_status(
+            celery_task_id=self.request.id,
+            status=OperationTask.Status.SUCCESS,
+            result=sync_result,
+            progress=100,
+            current_step="同步完成",
+        )
 
         # 发送同步完成信号
         platform_sync_completed.send(
@@ -515,6 +638,13 @@ def sync_all_platform_data(self, platform_id: str):
             "error": str(exc),
         }
 
+        # 更新任务状态为失败
+        update_operation_task_status(
+            celery_task_id=self.request.id,
+            status=OperationTask.Status.FAILED,
+            error_message=str(exc),
+        )
+
         # 发送同步失败信号
         try:
             platform = Platform.objects.get(id=platform_id)
@@ -530,6 +660,7 @@ def sync_all_platform_data(self, platform_id: str):
         return error_result
 
 
+@shared_task(verbose_name=_("同步所有平台数据"))
 @register_as_period_task(interval=3600)
 @after_app_ready_start
 def sync_all_platforms():
@@ -544,31 +675,169 @@ def sync_all_platforms():
 
     logger.info(f"找到 {platforms.count()} 个启用的平台")
 
-    # 并行同步所有平台
-    jobs = [sync_all_platform_data.s(str(platform.id)) for platform in platforms]
-    job = group(jobs)
-    result = job.apply_async()
+    # 异步启动所有平台的同步任务（不等待结果）
+    task_ids = []
+    for platform in platforms:
+        result = sync_all_platform_data.apply_async(args=[str(platform.id)])
+        task_ids.append(
+            {
+                "platform_id": str(platform.id),
+                "platform_name": platform.name,
+                "task_id": result.id,
+            }
+        )
 
+    logger.info(f"已为 {len(task_ids)} 个平台启动同步任务")
+
+    return {
+        "success": True,
+        "total_platforms": len(platforms),
+        "tasks": task_ids,
+        "message": "所有平台同步任务已启动",
+        "sync_time": timezone.now().isoformat(),
+    }
+
+
+@shared_task(
+    bind=True,
+    name="virt_center.collect_metrics",
+    verbose_name=_("Collect vSphere Metrics"),
+    max_retries=3,
+    default_retry_delay=60,
+)
+def collect_metrics(self, platform_id: str):
+    """
+    采集监控指标（主机和虚拟机）
+
+    Args:
+        platform_id: 平台ID
+    """
     try:
-        results = result.get(timeout=1800)  # 30分钟超时
+        logger.info(f"开始采集监控指标: platform_id={platform_id}")
 
-        success_count = sum(1 for r in results if r.get("success"))
-        failed_count = len(results) - success_count
+        # 获取平台对象
+        try:
+            platform = Platform.objects.get(id=platform_id, is_active=True)
+        except Platform.DoesNotExist:
+            logger.error(f"平台不存在或未启用: {platform_id}")
+            return {"success": False, "error": "平台不存在或未启用"}
 
-        logger.info(f"所有平台同步完成: 成功={success_count}, 失败={failed_count}")
+        # 连接 vSphere
+        client = get_vsphere_client(platform)
 
-        return {
-            "success": True,
-            "total_platforms": len(platforms),
-            "success_count": success_count,
-            "failed_count": failed_count,
-            "results": results,
-            "sync_time": timezone.now().isoformat(),
-        }
+        host_metrics_count = 0
+        vm_metrics_count = 0
+        current_time = timezone.now()
 
-    except Exception as e:
-        logger.error(f"同步所有平台失败: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e),
-        }
+        try:
+            with client:
+                # 采集主机监控指标
+                hosts = client.get_hosts()
+                for host_vim in hosts:
+                    try:
+                        # 查找数据库中的主机
+                        host_obj = Host.objects.filter(platform=platform, name=host_vim.name).first()
+                        if not host_obj:
+                            continue
+
+                        summary = host_vim.summary
+                        quick_stats = summary.quickStats if summary else None
+
+                        if quick_stats:
+                            HostMetrics.objects.create(
+                                host=host_obj,
+                                cpu_usage_percent=host_obj.cpu_usage,
+                                cpu_usage_mhz=quick_stats.overallCpuUsage or 0,
+                                memory_usage_percent=host_obj.memory_usage,
+                                memory_used_mb=quick_stats.overallMemoryUsage or 0,
+                                collected_at=current_time,
+                            )
+                            host_metrics_count += 1
+
+                    except Exception as e:
+                        logger.error(f"采集主机监控指标失败 {host_vim.name}: {str(e)}")
+                        continue
+
+                # 采集虚拟机监控指标
+                vms = client.get_vms()
+                for vm_vim in vms:
+                    try:
+                        # 跳过模板
+                        if vm_vim.config and vm_vim.config.template:
+                            continue
+
+                        # 查找数据库中的虚拟机
+                        vm_obj = VirtualMachine.objects.filter(platform=platform, name=vm_vim.name).first()
+                        if not vm_obj:
+                            continue
+
+                        summary = vm_vim.summary
+                        quick_stats = summary.quickStats if summary else None
+
+                        if quick_stats:
+                            VMMetrics.objects.create(
+                                vm=vm_obj,
+                                cpu_usage_percent=vm_obj.cpu_usage_percent,
+                                memory_usage_percent=vm_obj.memory_usage_percent,
+                                memory_used_mb=quick_stats.guestMemoryUsage or 0,
+                                collected_at=current_time,
+                            )
+                            vm_metrics_count += 1
+
+                    except Exception as e:
+                        logger.error(f"采集虚拟机监控指标失败 {vm_vim.name}: {str(e)}")
+                        continue
+
+                logger.info(f"监控指标采集完成: 主机={host_metrics_count}, 虚拟机={vm_metrics_count}")
+
+                return {
+                    "success": True,
+                    "platform_id": platform_id,
+                    "host_metrics_count": host_metrics_count,
+                    "vm_metrics_count": vm_metrics_count,
+                    "collected_at": current_time.isoformat(),
+                }
+
+        except Exception as e:
+            logger.error(f"连接或采集监控指标失败: {str(e)}")
+            raise
+
+    except Exception as exc:
+        logger.error(f"采集监控指标失败: {str(exc)}")
+        raise self.retry(exc=exc)
+
+
+@shared_task(name="virt_center.collect_all_platforms_metrics")
+@register_as_period_task(interval=300)  # 每5分钟采集一次监控指标
+def collect_all_platforms_metrics():
+    """定期采集所有平台的监控指标"""
+    logger.info("开始定期采集所有平台监控指标")
+
+    platforms = Platform.objects.filter(is_active=True)
+
+    if not platforms.exists():
+        logger.warning("没有启用的平台需要采集")
+        return {"success": True, "message": "没有启用的平台"}
+
+    logger.info(f"找到 {platforms.count()} 个启用的平台")
+
+    # 异步启动所有平台的监控采集任务（不等待结果）
+    task_ids = []
+    for platform in platforms:
+        result = collect_metrics.apply_async(args=[str(platform.id)])
+        task_ids.append(
+            {
+                "platform_id": str(platform.id),
+                "platform_name": platform.name,
+                "task_id": result.id,
+            }
+        )
+
+    logger.info(f"已为 {len(task_ids)} 个平台启动监控采集任务")
+
+    return {
+        "success": True,
+        "total_platforms": len(platforms),
+        "tasks": task_ids,
+        "message": "所有平台监控采集任务已启动",
+    }

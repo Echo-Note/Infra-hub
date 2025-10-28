@@ -139,7 +139,7 @@ class BookSerializer(BaseModelSerializer):
     # 自定义 input_type ，设置了 read_only=True 意味着只能通过详情查看，在新增和编辑页面不展示该字段
     # input_type 仅是前端组件渲染识别用， 可以自定义input_type ,但是前端组件得对定义的input_type 进行渲染
     # 前端自定义组件库 src/components/RePlusPage/src/components
-    # 渲染组件定义 src/components/RePlusPage/src/utils/columns.tsx
+    # 渲染组件定义 src/components/RePlusPage/src/services/columns.tsx
     block = input_wrapper(serializers.SerializerMethodField)(
         read_only=True, input_type="boolean", label="自定义input_type"
     )

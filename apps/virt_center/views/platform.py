@@ -12,6 +12,7 @@ from rest_framework.decorators import action
 from apps.common.core.modelset import BaseModelSet
 from apps.common.core.response import ApiResponse
 from apps.common.swagger.utils import get_default_response_schema
+from apps.virt_center.decorators import record_operation
 from apps.virt_center.models import Platform, PlatformCredential
 from apps.virt_center.serializers import PlatformCredentialSerializer, PlatformSerializer
 from apps.virt_center.tasks import sync_all_platform_data
@@ -33,12 +34,13 @@ class PlatformViewSet(BaseModelSet):
 
     @extend_schema(responses=get_default_response_schema())
     @action(methods=["POST"], detail=True, url_path="test-connection")
+    @record_operation("other", "platform")
     def test_connection(self, request, *args, **kwargs):
         """测试平台连接"""
         platform = self.get_object()
 
         try:
-            from apps.virt_center.utils.vsphere_client import get_vsphere_client
+            from apps.virt_center.services.vsphere_client import get_vsphere_client
 
             client = get_vsphere_client(platform)
 
@@ -71,6 +73,7 @@ class PlatformViewSet(BaseModelSet):
 
     @extend_schema(responses=get_default_response_schema())
     @action(methods=["POST"], detail=True, url_path="sync")
+    @record_operation("sync_data", "platform")
     def sync_platform(self, request, *args, **kwargs):
         """同步平台数据"""
         platform = self.get_object()

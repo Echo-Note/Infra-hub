@@ -59,7 +59,7 @@ export vsphere_host='10.10.100.20'
 export vsphere_username='administrator@vsphere.local'
 export vsphere_password='your_password'
 
-python apps/virt_center/utils/vsphere_client.py
+python apps/virt_center/services/vsphere_client.py
 ```
 
 #### 方式二：运行测试脚本
@@ -72,16 +72,16 @@ export VSPHERE_TEST_HOST='10.10.100.20'
 export VSPHERE_TEST_USERNAME='administrator@vsphere.local'
 export VSPHERE_TEST_PASSWORD='your_password'
 
-python apps/virt_center/utils/test_vsphere_real.py
+python apps/virt_center/services/test_vsphere_real.py
 
 # 或使用命令行参数
-python apps/virt_center/utils/test_vsphere_real.py \
+python apps/virt_center/services/test_vsphere_real.py \
     --host 10.10.100.20 \
     --username 'administrator@vsphere.local' \
     --password 'your_password'
 
 # 查看特定虚拟机详情
-python apps/virt_center/utils/test_vsphere_real.py \
+python apps/virt_center/services/test_vsphere_real.py \
     --vm-name 'my-vm-name'
 ```
 

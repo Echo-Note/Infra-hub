@@ -11,7 +11,18 @@ from typing import Any, Dict, List, Optional
 from django.db import transaction
 from django.utils import timezone
 
-from apps.virt_center.models import DataStore, Host, Platform, VirtualMachine, VMTemplate
+from apps.virt_center.models import (
+    DataStore,
+    Host,
+    HostNetwork,
+    HostResource,
+    Platform,
+    VirtualMachine,
+    VMDisk,
+    VMNetwork,
+    VMSnapshot,
+    VMTemplate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +68,172 @@ def sync_platform_to_db(platform: Platform, platform_data: Dict[str, Any]) -> Pl
 
     except Exception as e:
         logger.error(f"同步平台信息到数据库失败: {str(e)}")
+        raise
+
+
+def sync_host_resource_to_db(host: Host, resource_data: Dict[str, Any]):
+    """
+    同步主机资源信息到数据库
+
+    Args:
+        host: 主机对象
+        resource_data: 资源数据
+    """
+    try:
+        HostResource.objects.update_or_create(
+            host=host,
+            defaults=resource_data,
+        )
+        logger.debug(f"同步主机资源成功: {host.name}")
+    except Exception as e:
+        logger.error(f"同步主机资源失败 {host.name}: {str(e)}")
+        raise
+
+
+def sync_host_networks_to_db(host: Host, networks_data: List[Dict[str, Any]]):
+    """
+    同步主机网络配置到数据库
+
+    Args:
+        host: 主机对象
+        networks_data: 网络数据列表
+    """
+    try:
+        # 记录已同步的网络名称
+        synced_names = []
+
+        for network_data in networks_data:
+            network_name = network_data.pop("name")
+            synced_names.append(network_name)
+
+            HostNetwork.objects.update_or_create(
+                host=host,
+                name=network_name,
+                defaults=network_data,
+            )
+
+        # 删除不再存在的网络
+        HostNetwork.objects.filter(host=host).exclude(name__in=synced_names).delete()
+
+        logger.debug(f"同步主机网络成功: {host.name}, 数量={len(synced_names)}")
+
+    except Exception as e:
+        logger.error(f"同步主机网络失败 {host.name}: {str(e)}")
+        raise
+
+
+def sync_vm_disks_to_db(vm: VirtualMachine, disks_data: List[Dict[str, Any]]):
+    """
+    同步虚拟机磁盘信息到数据库
+
+    Args:
+        vm: 虚拟机对象
+        disks_data: 磁盘数据列表
+    """
+    try:
+        # 记录已同步的磁盘device_key
+        synced_keys = []
+
+        for disk_data in disks_data:
+            device_key = disk_data["device_key"]
+            synced_keys.append(device_key)
+
+            VMDisk.objects.update_or_create(
+                vm=vm,
+                device_key=device_key,
+                defaults=disk_data,
+            )
+
+        # 删除不再存在的磁盘
+        VMDisk.objects.filter(vm=vm).exclude(device_key__in=synced_keys).delete()
+
+        logger.debug(f"同步虚拟机磁盘成功: {vm.name}, 数量={len(synced_keys)}")
+
+    except Exception as e:
+        logger.error(f"同步虚拟机磁盘失败 {vm.name}: {str(e)}")
+        raise
+
+
+def sync_vm_networks_to_db(vm: VirtualMachine, networks_data: List[Dict[str, Any]]):
+    """
+    同步虚拟机网络信息到数据库
+
+    Args:
+        vm: 虚拟机对象
+        networks_data: 网络数据列表
+    """
+    try:
+        # 记录已同步的网卡device_key
+        synced_keys = []
+
+        for network_data in networks_data:
+            device_key = network_data["device_key"]
+            synced_keys.append(device_key)
+
+            VMNetwork.objects.update_or_create(
+                vm=vm,
+                device_key=device_key,
+                defaults=network_data,
+            )
+
+        # 删除不再存在的网卡
+        VMNetwork.objects.filter(vm=vm).exclude(device_key__in=synced_keys).delete()
+
+        logger.debug(f"同步虚拟机网络成功: {vm.name}, 数量={len(synced_keys)}")
+
+    except Exception as e:
+        logger.error(f"同步虚拟机网络失败 {vm.name}: {str(e)}")
+        raise
+
+
+def sync_vm_snapshots_to_db(vm: VirtualMachine, snapshots_data: List[Dict[str, Any]]):
+    """
+    同步虚拟机快照信息到数据库
+
+    Args:
+        vm: 虚拟机对象
+        snapshots_data: 快照数据列表
+    """
+    try:
+        # 记录已同步的快照ID
+        synced_ids = []
+        # 快照ID到对象的映射（用于处理父子关系）
+        snapshot_map = {}
+
+        # 第一遍：创建/更新所有快照（不处理父子关系）
+        for snapshot_data in snapshots_data:
+            snapshot_id = snapshot_data["snapshot_id"]
+            parent_snapshot_id = snapshot_data.pop("parent_snapshot_id", None)
+            synced_ids.append(snapshot_id)
+
+            snapshot_obj, created = VMSnapshot.objects.update_or_create(
+                vm=vm,
+                snapshot_id=snapshot_id,
+                defaults={
+                    **snapshot_data,
+                    "parent": None,  # 先不设置父快照
+                },
+            )
+            snapshot_map[snapshot_id] = {
+                "obj": snapshot_obj,
+                "parent_id": parent_snapshot_id,
+            }
+
+        # 第二遍：设置父子关系
+        for snapshot_id, snapshot_info in snapshot_map.items():
+            parent_id = snapshot_info["parent_id"]
+            if parent_id and parent_id in snapshot_map:
+                snapshot_obj = snapshot_info["obj"]
+                snapshot_obj.parent = snapshot_map[parent_id]["obj"]
+                snapshot_obj.save(update_fields=["parent"])
+
+        # 删除不再存在的快照
+        VMSnapshot.objects.filter(vm=vm).exclude(snapshot_id__in=synced_ids).delete()
+
+        logger.debug(f"同步虚拟机快照成功: {vm.name}, 数量={len(synced_ids)}")
+
+    except Exception as e:
+        logger.error(f"同步虚拟机快照失败 {vm.name}: {str(e)}")
         raise
 
 

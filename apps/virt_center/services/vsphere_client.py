@@ -281,7 +281,7 @@ def get_vsphere_client(platform) -> VSphereClient:
 
     Example:
         from apps.virt_center.models import Platform
-        from apps.virt_center.utils import get_vsphere_client
+        from apps.virt_center.services import get_vsphere_client
 
         platform = Platform.objects.get(name="生产环境 vCenter")
         client = get_vsphere_client(platform)
