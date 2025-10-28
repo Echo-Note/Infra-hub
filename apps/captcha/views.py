@@ -143,7 +143,7 @@ def captcha_audio(request, key):
             return HttpResponse(status=410)
 
         text = store.challenge
-        if "captcha.helpers.math_challenge" == settings.CAPTCHA_CHALLENGE_FUNCT:
+        if "apps.captcha.helpers.math_challenge" == settings.CAPTCHA_CHALLENGE_FUNCT:
             text = text.replace("*", "times").replace("-", "minus").replace("+", "plus")
         else:
             text = ", ".join(list(text))
