@@ -7,7 +7,7 @@
 ### 1. 克隆项目
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Echo-Note/Infra-hub.git
 cd Infra-hub
 ```
 
