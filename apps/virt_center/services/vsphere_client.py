@@ -693,12 +693,9 @@ def get_vsphere_client(platform) -> VSphereClient:
         finally:
             client.disconnect()
     """
-    from apps.common.utils.crypto import decrypt_password
 
     # 获取认证凭据
     credential = platform.credential
-    logger.info(f"获取到平台认证凭据: {credential.username}")
-    logger.info(f"获取到平台认证凭据: {credential.password}")
 
     return VSphereClient(
         host=platform.host,
