@@ -6,10 +6,11 @@
 
 from rest_framework import serializers
 
+from apps.common.core.serializers import BaseModelSerializer
 from apps.virt_center.models import Platform
 
 
-class PlatformSerializer(serializers.ModelSerializer):
+class PlatformSerializer(BaseModelSerializer):
     """平台序列化器"""
 
     platform_type_display = serializers.CharField(source="get_platform_type_display", read_only=True)
@@ -19,7 +20,7 @@ class PlatformSerializer(serializers.ModelSerializer):
     class Meta:
         model = Platform
         fields = [
-            "id",
+            "pk",
             "name",
             "platform_type",
             "platform_type_display",
@@ -43,8 +44,20 @@ class PlatformSerializer(serializers.ModelSerializer):
             "created_time",
             "updated_time",
         ]
+        table_fields = [
+            "pk",
+            "name",
+            "platform_type_display",
+            "host",
+            "port",
+            "status_display",
+            "is_active",
+            "total_hosts",
+            "total_vms",
+            "last_sync_time",
+        ]
         read_only_fields = [
-            "id",
+            "pk",
             "status",
             "version",
             "build",

@@ -6,7 +6,13 @@
 
 from rest_framework.routers import SimpleRouter
 
-from apps.virt_center.views import PlatformCredentialViewSet, PlatformViewSet, SyncTaskViewSet
+from apps.virt_center.views import (
+    HostViewSet,
+    PlatformCredentialViewSet,
+    PlatformViewSet,
+    SyncTaskViewSet,
+    VirtualMachineViewSet,
+)
 
 app_name = "virt_center"
 
@@ -17,5 +23,7 @@ router = SimpleRouter(trailing_slash=False)
 router.register("platforms", PlatformViewSet, basename="platform")
 router.register("credentials", PlatformCredentialViewSet, basename="credential")
 router.register("sync", SyncTaskViewSet, basename="sync-task")
+router.register("hosts", HostViewSet, basename="host")
+router.register("vms", VirtualMachineViewSet, basename="vm")
 
 urlpatterns = router.urls

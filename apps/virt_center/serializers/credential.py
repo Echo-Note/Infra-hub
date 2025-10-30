@@ -6,10 +6,11 @@
 
 from rest_framework import serializers
 
+from apps.common.core.serializers import BaseModelSerializer
 from apps.virt_center.models import Platform, PlatformCredential
 
 
-class PlatformCredentialSerializer(serializers.ModelSerializer):
+class PlatformCredentialSerializer(BaseModelSerializer):
     """平台凭据序列化器"""
 
     auth_type_display = serializers.CharField(source="get_auth_type_display", read_only=True)
@@ -18,7 +19,7 @@ class PlatformCredentialSerializer(serializers.ModelSerializer):
     class Meta:
         model = PlatformCredential
         fields = [
-            "id",
+            "pk",
             "platform",
             "platform_name",
             "auth_type",
@@ -33,13 +34,14 @@ class PlatformCredentialSerializer(serializers.ModelSerializer):
             "updated_time",
         ]
         read_only_fields = [
-            "id",
+            "pk",
             "session_id",
             "session_expires",
             "created_time",
             "updated_time",
         ]
         extra_kwargs = {
+            "platform": {"required": True, "attrs": ["pk", "name"], "format": "{name}"},
             "password": {"write_only": True},
             "token": {"write_only": True},
         }
