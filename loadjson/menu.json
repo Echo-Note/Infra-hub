@@ -96,6 +96,28 @@
 },
 {
   "model": "system.menu",
+  "pk": "010a5cc7-e695-4ff9-893d-feeea314c05e",
+  "fields": {
+    "created_time": "2025-10-30T09:45:04.590Z",
+    "updated_time": "2025-10-30T09:45:04.590Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "a3157637-60b8-4e6b-be61-74dcccd38484",
+    "menu_type": 2,
+    "name": "batchDestroy:VirtCenterHost",
+    "rank": 10003,
+    "path": "api/virt_center/hosts/batch-destroy$",
+    "component": null,
+    "is_active": true,
+    "meta": "6c1fb0e6-4a84-4a1c-8387-b249cd5434b1",
+    "method": "POST",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
   "pk": "04e6d9dc-46db-44fc-aa22-e653c6ab7e6e",
   "fields": {
     "created_time": "2024-11-01T01:40:55.049Z",
@@ -1021,6 +1043,28 @@
 },
 {
   "model": "system.menu",
+  "pk": "319fa017-fbcd-4d18-b9b3-87f3b1870336",
+  "fields": {
+    "created_time": "2025-10-30T09:47:00.546Z",
+    "updated_time": "2025-10-30T09:47:00.546Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "766fcc7d-87d6-46b7-bb86-addae1d372f4",
+    "menu_type": 2,
+    "name": "create:VirtCenterVM",
+    "rank": 10002,
+    "path": "api/virt_center/vms$",
+    "component": null,
+    "is_active": true,
+    "meta": "aa8fb319-d87c-46ae-bfa0-1e2fb7359e08",
+    "method": "POST",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
   "pk": "31f8bd94-d987-4d36-80b3-c41e97f8a777",
   "fields": {
     "created_time": "2024-11-01T01:40:54.993Z",
@@ -1798,6 +1842,28 @@
 },
 {
   "model": "system.menu",
+  "pk": "58c71b2a-fcaf-425f-8bd0-1f110f77b611",
+  "fields": {
+    "created_time": "2025-10-30T09:45:04.598Z",
+    "updated_time": "2025-10-30T09:45:04.598Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "a3157637-60b8-4e6b-be61-74dcccd38484",
+    "menu_type": 2,
+    "name": "statistics:VirtCenterHost",
+    "rank": 10004,
+    "path": "api/virt_center/hosts/statistics$",
+    "component": null,
+    "is_active": true,
+    "meta": "8f308f78-b55d-4299-a177-f0065bc393c7",
+    "method": "GET",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
   "pk": "5c53c6d2-ccdd-410f-8ef2-d20653fb31b5",
   "fields": {
     "created_time": "2024-01-22T09:32:03.651Z",
@@ -1998,6 +2064,50 @@
     "is_active": true,
     "meta": "e47927ae-bace-4bfb-9cf1-1bb5bdf2bc1e",
     "method": "DELETE",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
+  "pk": "641570ef-5a6e-42be-8332-f4e2df1c1f3d",
+  "fields": {
+    "created_time": "2025-10-30T09:45:04.625Z",
+    "updated_time": "2025-10-30T09:45:04.625Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "a3157637-60b8-4e6b-be61-74dcccd38484",
+    "menu_type": 2,
+    "name": "destroy:VirtCenterHost",
+    "rank": 10007,
+    "path": "api/virt_center/hosts/(?P<pk>[^/.]+)$",
+    "component": null,
+    "is_active": true,
+    "meta": "92475e30-a176-44f3-b6c8-b10a0397ee1f",
+    "method": "DELETE",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
+  "pk": "64d90633-5c58-4c78-aced-7773330f97d3",
+  "fields": {
+    "created_time": "2025-10-30T09:45:04.641Z",
+    "updated_time": "2025-10-30T09:45:04.641Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "a3157637-60b8-4e6b-be61-74dcccd38484",
+    "menu_type": 2,
+    "name": "operateHost:VirtCenterHost",
+    "rank": 10009,
+    "path": "api/virt_center/hosts/(?P<pk>[^/.]+)/operate$",
+    "component": null,
+    "is_active": true,
+    "meta": "36ccaef0-f0ee-4aa7-8783-37e3ce5b7586",
+    "method": "POST",
     "model": []
   }
 },
@@ -2436,6 +2546,50 @@
     "model": [
       "14071ee3-6725-4fcc-962d-ad7898efa284"
     ]
+  }
+},
+{
+  "model": "system.menu",
+  "pk": "766fcc7d-87d6-46b7-bb86-addae1d372f4",
+  "fields": {
+    "created_time": "2025-10-30T09:46:44.317Z",
+    "updated_time": "2025-10-30T09:46:44.317Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "738d9e50-8ab4-45a5-8f48-01f64260e7a1",
+    "menu_type": 1,
+    "name": "VirtCenterVM",
+    "rank": 0,
+    "path": "/virt_center/vm/index",
+    "component": "virt_center/vm/index",
+    "is_active": true,
+    "meta": "fc2d9c9c-5aa8-4c68-b130-d3f145afe231",
+    "method": "",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
+  "pk": "767096fa-a00f-4fd2-aaa7-305aa19703ac",
+  "fields": {
+    "created_time": "2025-10-30T09:47:00.633Z",
+    "updated_time": "2025-10-30T09:47:00.633Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "766fcc7d-87d6-46b7-bb86-addae1d372f4",
+    "menu_type": 2,
+    "name": "operateVm:VirtCenterVM",
+    "rank": 10008,
+    "path": "api/virt_center/vms/(?P<pk>[^/.]+)/operate$",
+    "component": null,
+    "is_active": true,
+    "meta": "be21203f-16f8-4705-a214-bcda56d7e7d5",
+    "method": "POST",
+    "model": []
   }
 },
 {
@@ -3007,6 +3161,28 @@
 },
 {
   "model": "system.menu",
+  "pk": "91893fec-f752-4a3f-a117-d72fcbaf6bd5",
+  "fields": {
+    "created_time": "2025-10-30T09:47:00.532Z",
+    "updated_time": "2025-10-30T09:47:00.532Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "766fcc7d-87d6-46b7-bb86-addae1d372f4",
+    "menu_type": 2,
+    "name": "list:VirtCenterVM",
+    "rank": 10001,
+    "path": "api/virt_center/vms$",
+    "component": null,
+    "is_active": true,
+    "meta": "8f4f08be-8911-485c-a78f-fc22928b84ba",
+    "method": "GET",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
   "pk": "91bb2a03-607e-4954-9883-bc1712c66273",
   "fields": {
     "created_time": "2024-06-07T07:22:21.976Z",
@@ -3237,6 +3413,28 @@
 },
 {
   "model": "system.menu",
+  "pk": "a3157637-60b8-4e6b-be61-74dcccd38484",
+  "fields": {
+    "created_time": "2025-10-30T09:40:17.141Z",
+    "updated_time": "2025-10-30T09:40:17.141Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "738d9e50-8ab4-45a5-8f48-01f64260e7a1",
+    "menu_type": 1,
+    "name": "VirtCenterHost",
+    "rank": 0,
+    "path": "/virt_center/host/index",
+    "component": "virt_center/host/index",
+    "is_active": true,
+    "meta": "0a98811b-3230-4eec-9897-d7dac8406333",
+    "method": "",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
   "pk": "a386ce52-0363-4e09-afad-a6bf8684183e",
   "fields": {
     "created_time": "2024-11-01T01:36:38.280Z",
@@ -3257,6 +3455,28 @@
     "model": [
       "23a586ba-6c71-4664-b1c0-edf41e6a3f52"
     ]
+  }
+},
+{
+  "model": "system.menu",
+  "pk": "a424a6db-8ccd-4569-ab7d-99c55e30c4f6",
+  "fields": {
+    "created_time": "2025-10-30T09:45:04.653Z",
+    "updated_time": "2025-10-30T09:45:04.653Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "a3157637-60b8-4e6b-be61-74dcccd38484",
+    "menu_type": 2,
+    "name": "syncHost:VirtCenterHost",
+    "rank": 10010,
+    "path": "api/virt_center/hosts/(?P<pk>[^/.]+)/sync$",
+    "component": null,
+    "is_active": true,
+    "meta": "50957548-cb1d-42c3-b33d-c29fe754f262",
+    "method": "POST",
+    "model": []
   }
 },
 {
@@ -3441,6 +3661,28 @@
 },
 {
   "model": "system.menu",
+  "pk": "b1920a78-90d4-4990-8db2-9fe1df5f7082",
+  "fields": {
+    "created_time": "2025-10-30T09:45:04.568Z",
+    "updated_time": "2025-10-30T09:45:04.568Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "a3157637-60b8-4e6b-be61-74dcccd38484",
+    "menu_type": 2,
+    "name": "list:VirtCenterHost",
+    "rank": 10001,
+    "path": "api/virt_center/hosts$",
+    "component": null,
+    "is_active": true,
+    "meta": "cc077d1c-af87-408c-8626-849ae0a2cd18",
+    "method": "GET",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
   "pk": "b1a01bd0-e437-4397-8e26-d532a0c04293",
   "fields": {
     "created_time": "2024-01-22T09:32:10.169Z",
@@ -3529,6 +3771,28 @@
 },
 {
   "model": "system.menu",
+  "pk": "b649a79e-bf09-4820-861d-8f908e8eb755",
+  "fields": {
+    "created_time": "2025-10-30T09:47:00.561Z",
+    "updated_time": "2025-10-30T09:47:00.561Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "766fcc7d-87d6-46b7-bb86-addae1d372f4",
+    "menu_type": 2,
+    "name": "batchDestroy:VirtCenterVM",
+    "rank": 10003,
+    "path": "api/virt_center/vms/batch-destroy$",
+    "component": null,
+    "is_active": true,
+    "meta": "18b8527c-0aac-475b-9002-911d68f3aaa4",
+    "method": "POST",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
   "pk": "b6a0ed04-ac8d-4e24-ad61-3d11e4e72260",
   "fields": {
     "created_time": "2024-01-22T09:32:07.013Z",
@@ -3568,6 +3832,28 @@
     "is_active": true,
     "meta": "5cc85860-41bd-40f5-bb09-db1aaae0887a",
     "method": "POST",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
+  "pk": "b81c797e-f60c-483f-9316-2e4aca961382",
+  "fields": {
+    "created_time": "2025-10-30T09:47:00.615Z",
+    "updated_time": "2025-10-30T09:47:00.615Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "766fcc7d-87d6-46b7-bb86-addae1d372f4",
+    "menu_type": 2,
+    "name": "destroy:VirtCenterVM",
+    "rank": 10007,
+    "path": "api/virt_center/vms/(?P<pk>[^/.]+)$",
+    "component": null,
+    "is_active": true,
+    "meta": "4c576406-6b89-4c20-9e39-e2e9effbf17b",
+    "method": "DELETE",
     "model": []
   }
 },
@@ -3797,6 +4083,28 @@
     "model": [
       "14071ee3-6725-4fcc-962d-ad7898efa284"
     ]
+  }
+},
+{
+  "model": "system.menu",
+  "pk": "c0cd8824-7121-4161-b0e4-9f0fc2c1709a",
+  "fields": {
+    "created_time": "2025-10-30T09:47:00.601Z",
+    "updated_time": "2025-10-30T09:47:00.601Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "766fcc7d-87d6-46b7-bb86-addae1d372f4",
+    "menu_type": 2,
+    "name": "partialUpdate:VirtCenterVM",
+    "rank": 10006,
+    "path": "api/virt_center/vms/(?P<pk>[^/.]+)$",
+    "component": null,
+    "is_active": true,
+    "meta": "bdd0ef85-5925-488c-9ae2-b7e5ca01ddeb",
+    "method": "PATCH",
+    "model": []
   }
 },
 {
@@ -4035,6 +4343,28 @@
 },
 {
   "model": "system.menu",
+  "pk": "cf2a629a-ba13-4930-8ada-c47583b20050",
+  "fields": {
+    "created_time": "2025-10-30T09:47:00.588Z",
+    "updated_time": "2025-10-30T09:47:00.588Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "766fcc7d-87d6-46b7-bb86-addae1d372f4",
+    "menu_type": 2,
+    "name": "retrieve:VirtCenterVM",
+    "rank": 10005,
+    "path": "api/virt_center/vms/(?P<pk>[^/.]+)$",
+    "component": null,
+    "is_active": true,
+    "meta": "1564008c-c9c2-49fe-ac3a-7efc8a61c339",
+    "method": "GET",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
   "pk": "d29bfc9a-3334-4e12-84f3-65de82b0862c",
   "fields": {
     "created_time": "2024-11-01T04:33:25.988Z",
@@ -4201,6 +4531,28 @@
 },
 {
   "model": "system.menu",
+  "pk": "d958652c-caf2-43b1-9ce6-d4b40dab78dd",
+  "fields": {
+    "created_time": "2025-10-30T09:47:00.649Z",
+    "updated_time": "2025-10-30T09:47:00.649Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "766fcc7d-87d6-46b7-bb86-addae1d372f4",
+    "menu_type": 2,
+    "name": "syncVm:VirtCenterVM",
+    "rank": 10009,
+    "path": "api/virt_center/vms/(?P<pk>[^/.]+)/sync$",
+    "component": null,
+    "is_active": true,
+    "meta": "5ca8754f-7f64-4e1a-8ff8-1ca1d1244e24",
+    "method": "POST",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
   "pk": "da0ceb5d-7b94-4c23-b6d7-b4b2747cb92d",
   "fields": {
     "created_time": "2024-06-07T10:30:06.450Z",
@@ -4339,6 +4691,28 @@
 },
 {
   "model": "system.menu",
+  "pk": "e0741da6-e6e8-4a2b-b453-12a2b72359cd",
+  "fields": {
+    "created_time": "2025-10-30T09:45:04.632Z",
+    "updated_time": "2025-10-30T09:45:04.632Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "a3157637-60b8-4e6b-be61-74dcccd38484",
+    "menu_type": 2,
+    "name": "listVms:VirtCenterHost",
+    "rank": 10008,
+    "path": "api/virt_center/hosts/(?P<pk>[^/.]+)/vms$",
+    "component": null,
+    "is_active": true,
+    "meta": "db6018f2-76b8-4427-a16f-9a529bb258ef",
+    "method": "GET",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
   "pk": "e0ca0938-d2bc-4113-a4f4-dbd9dc080370",
   "fields": {
     "created_time": "2024-08-02T07:48:04.196Z",
@@ -4450,6 +4824,28 @@
     "is_active": true,
     "meta": "5f28c8e6-3e3f-4b6c-a5dd-643f036f1903",
     "method": "",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
+  "pk": "e5e73972-d217-4b2e-9f63-27b086bc94bf",
+  "fields": {
+    "created_time": "2025-10-30T09:45:04.581Z",
+    "updated_time": "2025-10-30T09:45:04.581Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "a3157637-60b8-4e6b-be61-74dcccd38484",
+    "menu_type": 2,
+    "name": "create:VirtCenterHost",
+    "rank": 10002,
+    "path": "api/virt_center/hosts$",
+    "component": null,
+    "is_active": true,
+    "meta": "d71b4eca-8c93-4344-9c49-ab04e5664578",
+    "method": "POST",
     "model": []
   }
 },
@@ -4630,6 +5026,28 @@
     "component": "",
     "is_active": true,
     "meta": "fbf4d119-f0da-4fa7-a3f9-49cbdf009454",
+    "method": "GET",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
+  "pk": "ee8a6b77-d4f8-4cbc-8a98-110940200c24",
+  "fields": {
+    "created_time": "2025-10-30T09:45:04.607Z",
+    "updated_time": "2025-10-30T09:45:04.607Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "a3157637-60b8-4e6b-be61-74dcccd38484",
+    "menu_type": 2,
+    "name": "retrieve:VirtCenterHost",
+    "rank": 10005,
+    "path": "api/virt_center/hosts/(?P<pk>[^/.]+)$",
+    "component": null,
+    "is_active": true,
+    "meta": "e8b5bdf5-8282-46c2-8afc-f6afff0d0edf",
     "method": "GET",
     "model": []
   }
@@ -4821,6 +5239,28 @@
 },
 {
   "model": "system.menu",
+  "pk": "fbab7576-64d3-40ce-a452-428a3a6b1b45",
+  "fields": {
+    "created_time": "2025-10-30T09:47:00.573Z",
+    "updated_time": "2025-10-30T09:47:00.573Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "766fcc7d-87d6-46b7-bb86-addae1d372f4",
+    "menu_type": 2,
+    "name": "statistics:VirtCenterVM",
+    "rank": 10004,
+    "path": "api/virt_center/vms/statistics$",
+    "component": null,
+    "is_active": true,
+    "meta": "f9737002-c983-41ee-96b9-a9b2fd89c290",
+    "method": "GET",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
   "pk": "fbed520c-8ffd-4e32-8ce9-a9d3579c36c7",
   "fields": {
     "created_time": "2025-10-29T03:51:04.342Z",
@@ -4882,6 +5322,28 @@
     "is_active": true,
     "meta": "91c4f6bf-2dc1-4e37-a7eb-e93e8142f955",
     "method": "POST",
+    "model": []
+  }
+},
+{
+  "model": "system.menu",
+  "pk": "ff9160d6-29ea-489c-9d1a-617b4c7b1baa",
+  "fields": {
+    "created_time": "2025-10-30T09:45:04.615Z",
+    "updated_time": "2025-10-30T09:45:04.615Z",
+    "description": null,
+    "creator": 1,
+    "modifier": 1,
+    "dept_belong": null,
+    "parent": "a3157637-60b8-4e6b-be61-74dcccd38484",
+    "menu_type": 2,
+    "name": "partialUpdate:VirtCenterHost",
+    "rank": 10006,
+    "path": "api/virt_center/hosts/(?P<pk>[^/.]+)$",
+    "component": null,
+    "is_active": true,
+    "meta": "247635aa-21d7-4dd0-b4bc-3d41fd5b86fd",
+    "method": "PATCH",
     "model": []
   }
 },
