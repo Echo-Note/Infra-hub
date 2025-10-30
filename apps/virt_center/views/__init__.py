@@ -7,9 +7,11 @@
 from .credential import PlatformCredentialViewSet
 from .platform import PlatformViewSet
 from .sync import SyncTaskViewSet
+from  .hosts import EsxiHostViewSet
 
 __all__ = [
     "PlatformViewSet",
     "PlatformCredentialViewSet",
     "SyncTaskViewSet",
+    "EsxiHostViewSet",
 ]

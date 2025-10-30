@@ -6,7 +6,7 @@
 
 from rest_framework.routers import SimpleRouter
 
-from apps.virt_center.views import PlatformCredentialViewSet, PlatformViewSet, SyncTaskViewSet
+from apps.virt_center.views import PlatformCredentialViewSet, PlatformViewSet, SyncTaskViewSet, EsxiHostViewSet
 
 app_name = "virt_center"
 
@@ -17,5 +17,6 @@ router = SimpleRouter(trailing_slash=False)
 router.register("platforms", PlatformViewSet, basename="platform")
 router.register("credentials", PlatformCredentialViewSet, basename="credential")
 router.register("sync", SyncTaskViewSet, basename="sync-task")
+router.register("esxi", EsxiHostViewSet, basename="esxi-host")
 
 urlpatterns = router.urls

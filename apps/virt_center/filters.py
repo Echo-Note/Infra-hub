@@ -7,7 +7,7 @@
 from django_filters import rest_framework as filters
 
 from apps.common.core.filter import BaseFilterSet
-from apps.virt_center.models import Platform, PlatformCredential
+from apps.virt_center.models import Platform, PlatformCredential,Host
 
 
 class PlatformFilter(BaseFilterSet):
@@ -37,3 +37,24 @@ class PlatformCredentialFilter(BaseFilterSet):
     class Meta:
         model = PlatformCredential
         fields = ["platform", "auth_type"]
+
+
+
+class EsxiformFilter(BaseFilterSet):
+    """esxi过滤器"""
+
+    name = filters.CharFilter(field_name="name", lookup_expr="icontains")
+    host = filters.CharFilter(field_name="host", lookup_expr="icontains")
+    region = filters.CharFilter(field_name="region", lookup_expr="icontains")
+    datacenter = filters.CharFilter(field_name="datacenter", lookup_expr="icontains")
+
+    class Meta:
+        model = Host
+        fields = [
+            "name",
+            "host",
+            "status",
+            "is_active",
+            "region",
+            "datacenter",
+        ]
