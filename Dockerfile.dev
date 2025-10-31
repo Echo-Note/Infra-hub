@@ -1,0 +1,36 @@
+FROM astral/uv:python3.12-bookworm
+
+# 设置工作目录
+WORKDIR /opt/infra-hub
+
+# 安装系统依赖（一次性安装，构建到镜像中）
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      gcc g++ make curl \
+      pkg-config \
+      gettext \
+      default-libmysqlclient-dev \
+      libpq-dev \
+      libxml2-dev \
+      libxmlsec1-dev \
+      libxmlsec1-openssl && \
+    rm -rf /var/lib/apt/lists/*
+
+# 复制依赖配置文件
+COPY pyproject.toml uv.lock* ./
+
+# 创建空的项目结构（仅用于安装依赖）
+RUN mkdir -p apps server && \
+    touch apps/__init__.py server/__init__.py
+
+# 直接安装项目（包括所有依赖）到系统 Python
+# 实际代码会通过 volume 挂载覆盖
+RUN uv pip install --system --no-cache --index-url https://pypi.tuna.tsinghua.edu.cn/simple . && \
+    uv pip install --system --no-cache --index-url https://pypi.tuna.tsinghua.edu.cn/simple watchdog[watchmedo] && \
+    rm -rf apps server
+
+# 设置环境变量
+ENV PYTHONUNBUFFERED=1
+
+# 工作目录将通过 volume 挂载实际代码
+WORKDIR /opt/infra-hub

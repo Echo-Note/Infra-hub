@@ -6,6 +6,35 @@ networks:
       config:
         - subnet: 192.168.196.0/24
 
+# 扩展字段：定义可复用的配置模板
+x-app-common: &app-common
+  build:
+    context: .
+    dockerfile: Dockerfile.dev
+  image: infra-hub-dev:latest
+  restart: always
+  working_dir: /opt/infra-hub
+  networks:
+    - net
+  depends_on:
+    postgresql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+x-app-environment: &app-environment
+  TZ: ${TZ:-Asia/Shanghai}
+  DB_HOST: postgresql
+  DB_PORT: 5432
+  DB_DATABASE: ${DB_DATABASE:-xadmin}
+  DB_USER: ${DB_USER:-server}
+  DB_PASSWORD: ${DB_PASSWORD:-KGzKjZpWBp4R4RSa}
+  REDIS_HOST: redis
+  REDIS_PORT: ${REDIS_PORT:-6379}
+  REDIS_PASSWORD: ${REDIS_PASSWORD:-nineven}
+  DEBUG: "True"
+  DJANGO_SETTINGS_MODULE: server.settings
+
 services:
   postgresql:
     image: registry.cn-beijing.aliyuncs.com/nineaiyu/postgres:16.8
@@ -52,3 +81,57 @@ services:
       start_period: 10s
     networks:
       - net
+
+  web:
+    <<: *app-common
+    container_name: xadmin-web
+    hostname: xadmin-web
+    command:
+      - bash
+      - -c
+      - |
+        python manage.py start web
+    environment:
+      <<: *app-environment
+      HTTP_BIND_HOST: 0.0.0.0
+      HTTP_LISTEN_PORT: ${HTTP_PORT:-8896}
+      CELERY_FLOWER_HOST: 0.0.0.0
+      CELERY_FLOWER_PORT: ${FLOWER_PORT:-5555}
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./:/opt/infra-hub
+      - ${VOLUME_DIR:-../}/xadmin-app/data:/opt/infra-hub/data
+      - ${VOLUME_DIR:-../}/xadmin-app/static:/opt/infra-hub/static
+      - ${VOLUME_DIR:-../}/xadmin-app/media:/opt/infra-hub/media
+    ports:
+      - "${HTTP_PORT:-8896}:${HTTP_PORT:-8896}"
+      - "${FLOWER_PORT:-5555}:${FLOWER_PORT:-5555}"
+    healthcheck:
+      test: "curl -f http://localhost:${HTTP_PORT:-8896}/api/common/api/health || exit 1"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  celery:
+    <<: *app-common
+    container_name: xadmin-celery
+    hostname: xadmin-celery
+    command:
+      - bash
+      - -c
+      - |
+        python manage.py start task
+    environment:
+      <<: *app-environment
+      SERVER_HOSTNAME: xadmin-celery
+      CELERY_WORKER_COUNT: ${CELERY_WORKER_COUNT:-4}
+    volumes:
+      - ./:/opt/infra-hub
+      - ${VOLUME_DIR:-../}/xadmin-app/data:/opt/infra-hub/data
+    healthcheck:
+      test: "celery -A server inspect ping -d celery@xadmin-celery || exit 1"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
